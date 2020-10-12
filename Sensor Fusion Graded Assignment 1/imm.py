@@ -220,19 +220,15 @@ class IMM(Generic[MT]):
         sensor_state: Dict[str, Any] = None,
     ) -> float:
 
-        #raise NotImplementedError  # TODO: remove when implemented
-
         mode_conditioned_ll = np.fromiter(
             (
-                # Using the state filter (fs under) to calculate the mode conditional 
-                #log likelihood at z from modestate_s for the given sensor state
                 fs.loglikelihood(z, modestate_s, sensor_state = sensor_state)  
                 for fs, modestate_s in zip(self.filters, immstate.components)
             ),
             dtype=float,
         )
 
-        ll = logsumexp(a = mode_conditioned_ll, b = immstate.weights)  # Calculating the loglikelihood of the weighted averages.
+        ll = logsumexp(a = mode_conditioned_ll, b = immstate.weights)  # weighted average of likelihoods (not log!)
 
         assert np.isfinite(ll), "IMM.loglikelihood: ll not finite"
         assert isinstance(ll, float) or isinstance(
@@ -263,10 +259,10 @@ class IMM(Generic[MT]):
 
         # extract probabilities as array
         ## eg. association weights/beta: Pr(a)
-        weights = immstate_mixture.weights  # Pr{a | Z_1:k}
+        weights = immstate_mixture.weights  
         ## eg. the association conditioned mode probabilities element [j, s] is for association j and mode s: Pr(s | a = j)
         component_conditioned_mode_prob = np.array(
-            [c.weights.ravel() for c in immstate_mixture.components]        # Pr{s | a}
+            [c.weights.ravel() for c in immstate_mixture.components]       
         )
 
         # flip conditioning order with Bayes to get Pr(s), and Pr(a | s)
@@ -281,22 +277,43 @@ class IMM(Generic[MT]):
         
 
         num_modes = len(self.filters)
-        flipped_mixture_components = []
+        #mixture_components = []
 
-        for (s, prob_a_cond_s) in zip(range(num_modes), mode_conditioned_component_prob):
-            components_across_a = [
-                imm_component.components[s] 
-                for imm_component in immstate_mixture.components
-            ]
-            flipped_mixture_components.append( MixtureParameters(prob_a_cond_s, components_across_a) )
+        #for (s, prob_a_condi_s) in zip(range(num_modes), mode_conditioned_component_prob):
+          #  components_across_a = [
+          #      imm_component.components[s] 
+          #      for imm_component in immstate_mixture.components
+         #   ]
+         #   mixture_components.append( MixtureParameters(prob_a_condi_s, components_across_a) )
 
-        mode_states: List[GaussParams] = [ 
-            self.filters[s].reduce_mixture(mixture_params) 
-            for (s, mixture_params) in zip(range(num_modes), flipped_mixture_components) 
-        ]
+        #mode_states: List[GaussParams] = [ 
+        #    self.filters[s].reduce_mixture(params_mix) 
+        #    for (s, params_mix) in zip(range(num_modes), mixture_components) 
+        #]
 
-        immstate_reduced = MixtureParameters(mode_prob, mode_states)
 
+        #immstate_reduced = MixtureParameters(mode_prob, mode_states)
+
+        #return immstate_reduced
+
+        mixture_components = []
+        for s in range(len(self.filters)):#iterate over all modes
+            w, c = [], [] #weights and components
+            weights_size = len(immstate_mixture.weights)
+ 
+            for j in range(weights_size): #iterate over every ass
+                a_s = immstate_mixture.components[j].components[s]
+                mode_a_s = immstate_mixture.components[j].weights[s]
+                w.append(mode_a_s*immstate_mixture.weights[j]/mode_prob[s])
+                c.append(a_s)
+ 
+            reduced_mixture = self.filters[0].reduce_mixture(MixtureParameters(weights,c))
+            mixture_components.append(reduced_mixture)
+ 
+ 
+ 
+        immstate_reduced = MixtureParameters(mode_prob, mixture_components)
+ 
         return immstate_reduced
 
     def estimate(self, immstate: MixtureParameters[MT]) -> GaussParams:
@@ -314,16 +331,14 @@ class IMM(Generic[MT]):
         sensor_state: Dict[str, Any] = None,
     ) -> bool:
         """Check if z is within the gate of any mode in immstate in sensor_state"""
-
-
         # Find which of the modes gates the measurement z, Hint: self.filters[0].gate
 
         mode_gated: List[bool] = []
 
         for mode in immstate.components:
-            mode_gated.append( self.filters[0].gate(z, mode, gate_size_square, sensor_state=sensor_state) )
+            mode_gated.append(self.filters[0].gate(z, mode, gate_size_square, sensor_state=sensor_state))
 
-        gated: bool = np.any(mode_gated)  # Check if _any_ of the modes gated the measurement
+        gated: bool = np.any(mode_gated)  # Checking if _any_ of the modes gated the measurement
         return gated
 
     def NISes(
