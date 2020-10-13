@@ -103,7 +103,7 @@ if play_movie:
     maxes = np.vstack(Z).max(axis=0)
     ax2.axis([mins[0], maxes[0], mins[1], maxes[1]])
     plotpause = 0.1
-    # sets a pause in between time steps if it goes too fast
+    # sets a pause in between time steps if it goes to fast
     for k, Zk in enumerate(Z[play_slice]):
         sh.set_offsets(Zk)
         th.set_text(f"measurements at step {k}")

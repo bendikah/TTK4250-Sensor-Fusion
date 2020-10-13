@@ -20,17 +20,34 @@ import estimationstatistics as estats
 
 # %% plot config check and style setup
 
+
 # to see your plot config
 print(f"matplotlib backend: {matplotlib.get_backend()}")
 print(f"matplotlib config file: {matplotlib.matplotlib_fname()}")
 print(f"matplotlib config dir: {matplotlib.get_configdir()}")
 plt.close("all")
 
+# try to set separate window ploting
+if "inline" in matplotlib.get_backend():
+    print("Plotting is set to inline at the moment:", end=" ")
+
+    if "ipykernel" in matplotlib.get_backend():
+        print("backend is ipykernel (IPython?)")
+        print("Trying to set backend to separate window:", end=" ")
+        import IPython
+
+        IPython.get_ipython().run_line_magic("matplotlib", "")
+    else:
+        print("unknown inline backend")
+
+print("continuing with this plotting backend", end="\n\n\n")
+
+
 # set styles
 try:
     # installed with "pip install SciencePLots" (https://github.com/garrettj403/SciencePlots.git)
     # gives quite nice plots
-    plt_styles = ["science", "grid", "ieee", "bright", "no-latex"]
+    plt_styles = ["science", "grid", "bright", "no-latex"]
     plt.style.use(plt_styles)
     print(f"pyplot using style set {plt_styles}")
 except Exception as e:
@@ -107,7 +124,7 @@ if play_movie:
 
 # sensor
 sigma_z = 6
-clutter_intensity = 1e-4        # Sjekk diskusjonsforum for hvordan velge
+clutter_intensity = 1e-4
 PD = 0.9
 gate_size = 3
 
@@ -127,7 +144,8 @@ PI = np.array([[PI11, (1 - PI11)], [(1 - PI22), PI22]])
 assert np.allclose(np.sum(PI, axis=1), 1), "rows of PI must sum to 1"
 
 mean_init = np.array([0, 0, 0, 0, 0])
-cov_init = np.diag([2 * sigma_z, 2 * sigma_z, 3, 3, 0.1]) ** 2 # 
+#cov_init = np.diag([1000, 1000, 30, 30, 0.1]) ** 2  # THIS WILL NOT BE GOOD
+cov_init = np.diag([2*sigma_z, 2*sigma_z, 3,3,0.1])**2
 mode_probabilities_init = np.array([p10, (1 - p10)])
 mode_states_init = GaussParams(mean_init, cov_init)
 init_imm_state = MixtureParameters(mode_probabilities_init, [mode_states_init] * 2)

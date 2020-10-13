@@ -277,27 +277,10 @@ class IMM(Generic[MT]):
         
 
         num_modes = len(self.filters)
-        #mixture_components = []
 
-        #for (s, prob_a_condi_s) in zip(range(num_modes), mode_conditioned_component_prob):
-          #  components_across_a = [
-          #      imm_component.components[s] 
-          #      for imm_component in immstate_mixture.components
-         #   ]
-         #   mixture_components.append( MixtureParameters(prob_a_condi_s, components_across_a) )
-
-        #mode_states: List[GaussParams] = [ 
-        #    self.filters[s].reduce_mixture(params_mix) 
-        #    for (s, params_mix) in zip(range(num_modes), mixture_components) 
-        #]
-
-
-        #immstate_reduced = MixtureParameters(mode_prob, mode_states)
-
-        #return immstate_reduced
 
         mixture_components = []
-        for s in range(len(self.filters)):#iterate over all modes
+        for s in range(num_modes):#iterate over all modes
             w, c = [], [] #weights and components
             weights_size = len(immstate_mixture.weights)
  
