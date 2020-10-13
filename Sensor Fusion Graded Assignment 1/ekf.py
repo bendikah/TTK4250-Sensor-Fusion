@@ -84,12 +84,18 @@ class EKF:
         """Predict the EKF state Ts seconds ahead."""
 
         x, P = ekfstate  # tuple unpacking
-
+        
+        #transition matrix and cov matrix
         F = self.dynamic_model.F(x, Ts)
         Q = self.dynamic_model.Q(x, Ts)
 
+        #predicted state and covariance
         x_pred = F @ x
         P_pred = F @ P @ F.T + Q
+        
+        assert np.all(np.isfinite(P_pred)) and np.all(
+            np.isfinite(x_pred)
+        ), "Non-finite EKF prediction."
 
         state_pred = GaussParams(x_pred, P_pred)
 
@@ -106,7 +112,7 @@ class EKF:
 
         x = ekfstate.mean
 
-        zbar = self.sensor_model.h(x)
+        zbar = self.sensor_model.h(x, sensor_state=sensor_state)
 
         v = z - zbar
 
@@ -116,30 +122,28 @@ class EKF:
             ekfstate_mixture: MixtureParameters[GaussParams]
             ) -> GaussParams:
         """ Merge a Gaussian mixture into a single mixture"""
-        weights = ekfstate_mixture.weights
-        means = np.array([component.mean for component in ekfstate_mixture.components])
-        covs = np.array([component.cov for component in ekfstate_mixture.components])
-        M = len(weights)
-        d = len(means[0])
+        w = ekfstate_mixture.weights
+        x = np.array([c.mean for c in ekfstate_mixture.components])
+        P = np.array([c.cov for c in ekfstate_mixture.components])
+        N = len(w)
 
-        mean = np.zeros_like(means[0])
-        for i in range(M):
-            mean += weights[i]*means[i]
+        mean = np.zeros_like(x[0])
+        for i in range(N):
+            mean += w[i]*x[i]
 
-        mean_diff = means - mean
+        x_diff = x - mean
 
-        cov_mean = np.zeros_like(covs[0])
-        cov_soi = np.zeros_like(covs[0])
-        for i in range(M):
-            cov_mean += weights[i] * covs[i]
-            md = mean_diff[i][:,np.newaxis]
-            cov_md = md @ md.T
-            assert cov_md.shape == (d,d), f"wrong shape for {mean_diff}, expected {(M,M)}"
-            cov_soi += weights[i] * cov_md
+        P_bar = np.zeros_like(P[0])
+        P_s = np.zeros_like(P[0])
+        #iterate over weights
+        for i in range(N):
+            P_bar += w[i]*P[i]
+            m = x_diff[i][:,np.newaxis]
+            P_md = m@m.T
+            P_s += w[i]*P_md
+        P = P_bar + P_s
 
-        cov = cov_mean + cov_soi
-
-        return GaussParams(mean, cov)
+        return GaussParams(mean, P)
 
 
 
@@ -188,12 +192,13 @@ class EKF:
         v, S = self.innovation(z, ekfstate, sensor_state=sensor_state)
 
         H = self.sensor_model.H(x, sensor_state=sensor_state)
-
         W = P @ H.T @ la.inv(S)
 
         x_upd = x + W @ v
-        I = np.eye(x.shape[0])
-        P_upd = (I - W @ H) @ P
+        I = np.eye(*P.shape)
+        #P_upd = (I - W @ H) @ P
+        #Joseph form (more numerically stable)
+        P_upd = (I - W @ H) @ P @ (I - W @ H).T + W @ self.sensor_model.R(x) @ W.T
 
         ekfstate_upd = GaussParams(x_upd, P_upd)
 
@@ -209,10 +214,8 @@ class EKF:
              ) -> GaussParams:
         """Predict ekfstate Ts units ahead and then update this prediction with z in sensor_state."""
 
-        # resue the above functions
         ekfstate_pred = self.predict(ekfstate, Ts)
-        ekfstate_upd = self.update(z, ekfstate_pred)
-
+        ekfstate_upd = self.update(z, ekfstate_pred, sensor_state=sensor_state)
         return ekfstate_upd
 
     def NIS(self,
@@ -226,7 +229,10 @@ class EKF:
         v, S = self.innovation(z, ekfstate, sensor_state=sensor_state)
 
         NIS = v.T @ la.solve(S, v)
-
+        #alternative:
+        #cholS = la.cholesky(S, lower=True)
+        #invcholS_v = la.solve_triangular(cholS, v, lower=True)
+        #NIS = (invcholS_v ** 2).sum()
         return NIS
 
     @classmethod
@@ -256,11 +262,10 @@ class EKF:
              ) -> bool:
         """ Check if z is inside sqrt(gate_sized_squared)-sigma ellipse of ekfstate in sensor_state """
 
-        # a function to be used in PDA and IMM-PDA
         v, S = self.innovation(z, ekfstate, sensor_state=sensor_state)
-        innov = v.T @ la.solve(S, v)
+        innovation = v.T@la.solve(S, v)
 
-        return  innov < gate_size_square
+        return  innovation < gate_size_square
 
 
     def loglikelihood(self,
@@ -269,43 +274,28 @@ class EKF:
                       sensor_state: Dict[str, Any] = None
                       ) -> float:
         """Calculate the log likelihood of ekfstate at z in sensor_state"""
-        # we need this function in IMM, PDA and IMM-PDA exercises
-        # not necessary for tuning in EKF exercise
+        #alternative: np.linalg.logdet
         v, S = self.innovation(z, ekfstate, sensor_state=sensor_state)
-
-        # DONE: log likelihood, Hint: log(N(v, S))) -> NIS, la.slogdet.
-        NIS = self.NIS(z, ekfstate)
-        sign, logdet = np.linalg.slogdet(S)
-        ll = -np.log(2*np.pi) - 0.5*logdet - 0.5*NIS
-
+        ll = scipy.stats.multivariate_normal.logpdf(v, cov=S)
+        #alternative 2: la.cholesky
         return ll
 
     @classmethod
     def estimate(cls, ekfstate: GaussParams):
         """Get the estimate from the state with its covariance. (Compatibility method)"""
-        # dummy function for compatibility with IMM class
         return ekfstate
 
     def estimate_sequence(
             self,
-            # A sequence of measurements
             Z: Sequence[np.ndarray],
-            # the initial KF state to use for either prediction or update (see start_with_prediction)
             init_ekfstate: GaussParams,
-            # Time difference between Z's. If start_with_prediction: also diff before the first Z
             Ts: Union[float, Sequence[float]],
             *,
-            # An optional sequence of the sensor states for when Z was recorded
             sensor_state: Optional[Iterable[Optional[Dict[str, Any]]]] = None,
-            # sets if Ts should be used for predicting before the first measurement in Z
             start_with_prediction: bool = False,
     ) -> Tuple[GaussParamList, GaussParamList]:
         """Create estimates for the whole time series of measurements."""
-
-        # sequence length
         K = len(Z)
-
-        # Create and amend the sampling array
         Ts_start_idx = int(not start_with_prediction)
         Ts_arr = np.empty(K)
         Ts_arr[Ts_start_idx:] = Ts
@@ -323,7 +313,7 @@ class EKF:
         ekfupd_list = GaussParamList.allocate(K, n)
 
         # perform the actual predict and update cycle
-        # DONE loop over the data and get both the predicted and updated states in the lists
+        # TODO loop over the data and get both the predicted and updated states in the lists
         # the predicted is good to have for evaluation purposes
         # A potential pythonic way of looping through  the data
         for k, (zk, Tsk, ssk) in enumerate(zip(Z, Ts_arr, sensor_state_seq)):
@@ -331,7 +321,7 @@ class EKF:
                 ekfstate = ekfupd
             else:
                 ekfstate = ekfupd_list[k-1]
-
+                
             ekfpred_list[k] = self.predict(ekfstate, Tsk)
             ekfupd_list[k] = self.update(zk, ekfpred_list[k])
 
