@@ -97,7 +97,7 @@ ax1.set_title("True trajectory and the nearby measurements")
 plt.show(block=False)
 
 # %% play measurement movie. Remember that you can cross out the window
-play_movie = True
+play_movie = False
 play_slice = slice(0, K)
 if play_movie:
     if "inline" in matplotlib.get_backend():
@@ -138,20 +138,27 @@ sigma_a_CT = 0.01
 sigma_omega = 0.2
 
 # markov chain
-PI11 = 0.9
-PI22 = 0.9
+PI11 = 0.7
+PI13 = 0.025
+PI22 = 0.97
+PI23 = 0.01
+PI33 = 0.7 
+PI31 = 0.025
 
-p10 = 0.9  # initvalue for mode probabilities
+p10 = 0.95  # initvalue for mode probabilities
+p20 = 0.025
+p30 = 1 - p10 - p20 #TODO
 
-PI = np.array([[PI11, (1 - PI11)], [(1 - PI22), PI22]])
+PI = np.array([[PI11, (1 - (PI11 + PI13)), PI13], [(1 - (PI22 + PI23)), PI22, PI23], [PI31, 1 - (PI31 + PI33), PI33]])
 assert np.allclose(np.sum(PI, axis=1), 1), "rows of PI must sum to 1"
 
-mean_init = np.array([0, 0, 0, 0, 0])
+mean_gt = Xgt[0]
+mean_init = np.append(mean_gt, 0.1)
 #cov_init = np.diag([10, 10, 0, 0, 0.1]) ** 2  # THIS WILL NOT BE GOOD
-cov_init = np.diag([2*sigma_z, 2*sigma_z, 3,3,0.1])**2
-mode_probabilities_init = np.array([p10, (1 - p10)])
+cov_init = np.diag([2*sigma_z, 2*sigma_z, 3, 3, 0.1])**2
+mode_probabilities_init = np.array([p10, p20, p30]) #TODO
 mode_states_init = GaussParams(mean_init, cov_init)
-init_imm_state = MixtureParameters(mode_probabilities_init, [mode_states_init] * 2)
+init_imm_state = MixtureParameters(mode_probabilities_init, [mode_states_init] * 3) #*2 without CVH.
 
 assert np.allclose(
     np.sum(mode_probabilities_init), 1
@@ -166,7 +173,7 @@ dynamic_models.append(dynamicmodels.WhitenoiseAccelleration(sigma_a_CVH, n=5))
 ekf_filters = []
 ekf_filters.append(ekf.EKF(dynamic_models[0], measurement_model))
 ekf_filters.append(ekf.EKF(dynamic_models[1], measurement_model))
-#ekf_filters.append(ekf.EKF(dynamic_models[2], measurement_model))
+ekf_filters.append(ekf.EKF(dynamic_models[2], measurement_model))
 
 imm_filter = imm.IMM(ekf_filters, PI)
 
