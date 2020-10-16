@@ -121,16 +121,17 @@ if play_movie:
 # %% IMM-PDA
 
 # sensor
-sigma_z = 12
+sigma_z = 10
 clutter_intensity = 2e-5
-PD = 0.9
-gate_size = 4
+PD = 0.95
+gate_size = 5
 
 # dynamic models
-sigma_a_CV = 0.01
-sigma_a_CVH = 5
-sigma_a_CT = 0.01
-sigma_omega = 0.2
+sigma_a_CV = 0.3
+sigma_a_CT = 0.12
+sigma_omega = 0.09
+sigma_a_CVH = 3
+
 
 # markov chain
 PI11 = 0.80
