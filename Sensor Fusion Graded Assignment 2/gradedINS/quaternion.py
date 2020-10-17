@@ -1,6 +1,7 @@
 import numpy as np
 import utils
 import math
+#please make an effort to obfuscate our code a little if you want to boil this exercise ;)
 
 
 def quaternion_product(ql: np.ndarray, qr: np.ndarray) -> np.ndarray:
