@@ -123,20 +123,20 @@ if play_movie:
 # but no exceptions do not guarantee correct implementation.
 
 # sensor
-sigma_z = 6
+sigma_z = 2
 clutter_intensity = 2e-5
 PD = 0.95
 gate_size = 3
 
 # dynamic models
-sigma_a_CV = 0.06
-sigma_a_CT = 0.06
+sigma_a_CV = 0.3
+sigma_a_CT = 0.12
 sigma_omega = 0.04
 
 
 # markov chain
-PI11 = 0.9
-PI22 = 0.9
+PI11 = 0.8
+PI22 = 0.8
 
 p10 = 0.9  # initvalue for mode probabilities
 
@@ -211,7 +211,7 @@ peak_vel_deviation = velerr.max()
 
 
 # consistency
-confprob = 0.9
+confprob = 0.95
 CI2 = np.array(scipy.stats.chi2.interval(confprob, 2))
 CI4 = np.array(scipy.stats.chi2.interval(confprob, 4))
 

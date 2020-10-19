@@ -154,7 +154,7 @@ assert np.allclose(np.sum(PI, axis=1), 1), "rows of PI must sum to 1"
 
 mean_init = np.append(Xgt[0], 0.05)
 #cov_init = np.diag([10, 10, 0, 0, 0.1]) ** 2  # THIS WILL NOT BE GOOD
-cov_init = np.diag([3*sigma_z, 3*sigma_z, 2, 2, 0.1])**2
+cov_init = np.diag([3*sigma_z, 3*sigma_z, 3, 3, 0.1])**2
 mode_probabilities_init = np.array([p10, p20, p30])
 mode_states_init = GaussParams(mean_init, cov_init)
 init_imm_state = MixtureParameters(mode_probabilities_init, [mode_states_init] * 3) #*2 without CVH.
@@ -222,7 +222,7 @@ peak_vel_deviation = velerr.max()
 
 
 # consistency
-confprob = 0.9
+confprob = 0.95
 CI2 = np.array(scipy.stats.chi2.interval(confprob, 2))
 CI4 = np.array(scipy.stats.chi2.interval(confprob, 4))
 
