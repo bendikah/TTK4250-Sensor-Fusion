@@ -6,6 +6,7 @@ import scipy.stats
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import eskf
 
 # try: # see if tqdm is available, otherwise define it as a dummy
 #     try: # Ipython seem to require different tqdm.. try..except seem to be the easiest way to check
