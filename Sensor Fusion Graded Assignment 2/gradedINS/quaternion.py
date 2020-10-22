@@ -42,7 +42,12 @@ def quaternion_product(ql: np.ndarray, qr: np.ndarray) -> np.ndarray:
             f"utils.quaternion_product: Quaternion multiplication error, right quaternion wrong shape: {qr.shape}"
         )
 
-    quaternion = np.array([[eta_left @ eta_right - epsilon_left.T @ epsilon_right],[eta_right @ epsilon_left + eta_left @ epsilon_right + utils.cross_product_matrix(epsilon_left, epsilon_right)]])# TODO: Implement quaternion product
+    eps = np.zeros((4,4))
+    eps[0,1:4] = -epsilon_left.T
+    eps[1:4,0:1] = epsilon_left
+    eps[1:4,1:4] = -utils.cross_product_matrix(epsilon_left)
+    quaternion = np.array(eta_left*np.eye(4)+eps) @ q_right
+    
     #Is the above correct?
     # Ensure result is of correct shape
     quaternion = quaternion.ravel()
@@ -79,7 +84,7 @@ def quaternion_to_rotation_matrix(
             f"quaternion.quaternion_to_rotation_matrix: Quaternion to multiplication error, quaternion shape incorrect: {quaternion.shape}"
         )
     #Eq. 10.37 in the book
-    R = np.eye(3) + 2 @ eta @ utils.cross_product_matrix(epsilon) + 2 @ utils.cross_product_matrix(epsilon) @ utils.cross_product_matrix(epsilon)# TODO: Convert from quaternion to rotation matrix
+    R = np.eye(3) + 2 * eta * utils.cross_product_matrix(epsilon) + 2 * utils.cross_product_matrix(epsilon) @ utils.cross_product_matrix(epsilon)
 
     if debug:
         assert np.allclose(
