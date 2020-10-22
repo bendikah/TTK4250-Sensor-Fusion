@@ -124,12 +124,13 @@ class ESKF:
         quaternion_prediction = quaternion_product(quaternion, qr) 
 
         # Normalize quaternion
-        quaternion_prediction = np.linalg.norm(quaternion_prediction) 
+        quaternion_prediction = quaternion_prediction / np.linalg.norm(quaternion_prediction) 
 
-        acceleration_bias_prediction = acceleration_bias - self.p_acc*np.identity(3)*acceleration_bias*Ts
+        #acceleration_bias_prediction = acceleration_bias - self.p_acc*np.identity(3)*acceleration_bias*Ts
         
-        gyroscope_bias_prediction = gyroscope_bias - self.p_gyro*np.identity(3)*gyroscope_bias*Ts
-
+        #gyroscope_bias_prediction = gyroscope_bias - self.p_gyro*np.identity(3)*gyroscope_bias*Ts
+        acceleration_bias_prediction = (1 - Ts * self.p_acc) * acceleration_bias
+        gyroscope_bias_prediction = (1 - Ts * self.p_gyro) * gyroscope_bias        
         x_nominal_predicted = np.concatenate(
             (
                 position_prediction,
@@ -216,8 +217,9 @@ class ESKF:
 
         R = quaternion_to_rotation_matrix(x_nominal[ATT_IDX], debug=self.debug)
 
-        G = np.vstack(np.zeros(3,12), la.block_diag(-R, -np.identity(3), np.identity(6))) 
-
+        #G = np.vstack(np.zeros(3,12), la.block_diag(-R, -np.identity(3), np.identity(6))) 
+        G_diag = la.block_diag(-R, -np.eye(3), np.eye(3), np.eye(3))
+        G = np.vstack([np.zeros((3,12)), G_diag])
         assert G.shape == (15, 12), f"ESKF.Gerr: G-matrix shape incorrect {G.shape}"
         return G
 
@@ -257,8 +259,8 @@ class ESKF:
 
         A = self.Aerr(x_nominal, acceleration, omega)
         G = self.Gerr(x_nominal)
-
-        V = np.block([[-A, G @ self.Q_err @ np.linalg.inv(G)],[np.zeros(15), np.linalg.inv(A)]])*Ts  #np.zeros((30, 30))
+        V = np.block([[-A, G@self.Q_err@G.T], [np.zeros_like(A), A.T]]) * Ts
+        #V = np.block([[-A, G @ self.Q_err @ np.linalg.inv(G)],[np.zeros(15), np.linalg.inv(A)]])*Ts  #np.zeros((30, 30))
         assert V.shape == (
             30,
             30,
@@ -269,9 +271,11 @@ class ESKF:
         IDX2 = CatSlice(start=0, stop=15)
         
 
-        Ad = np.linalg.inv(V[IDX1*IDX1])
-        GQGd = Ad @ V[IDX1*IDX2]
-
+        #Ad = np.linalg.inv(V[IDX1*IDX1])
+        #GQGd = Ad @ V[IDX1*IDX2]
+        
+        Ad = VanLoanMatrix[CatSlice(15,30)**2].T
+        GQGd = Ad @ VanLoanMatrix[CatSlice(0,15)*CatSlice(15,30)]
         assert Ad.shape == (
             15,
             15,
@@ -439,9 +443,10 @@ class ESKF:
         
 
         # Covariance
-        G_injected = la.block_diag(np.identity(6), np.identity(3)-cross_product_matrix(0.5*delta_x[INJ_IDX]), np.identity(6)) #np.zeros((1,))  # TODO: Compensate for injection in the covariances
-        P_injected = G_injected @ P @ np.linalg.inv(G_injected) # TODO: Compensate for injection in the covariances
-
+#        G_injected = la.block_diag(np.identity(6), np.identity(3)-cross_product_matrix(0.5*delta_x[INJ_IDX]), np.identity(6)) #np.zeros((1,))  # TODO: Compensate for injection in the covariances
+#        P_injected = G_injected @ P @ np.linalg.inv(G_injected) # TODO: Compensate for injection in the covariances
+        G_injected = la.block_diag(np.eye(6), np.eye(3) - cross_product_matrix(delta_x[ERR_ATT_IDX]/2), np.eye(6))  
+        P_injected = G_injected @ P @ G_injected.T
         assert x_injected.shape == (
             16,
         ), f"ESKF.inject: x_injected shape incorrect {x_injected.shape}"

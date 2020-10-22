@@ -8,20 +8,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import eskf
 
-# try: # see if tqdm is available, otherwise define it as a dummy
-#     try: # Ipython seem to require different tqdm.. try..except seem to be the easiest way to check
-#         __IPYTHON__
-#         from tqdm.notebook import tqdm
-#     except:
-#         from tqdm import tqdm
-# except Exception as e:
-#     print(e)
-#     print(
-#         "install tqdm (conda install tqdm, or pip install tqdm) to get nice progress bars. "
-#     )
+try: # see if tqdm is available, otherwise define it as a dummy
+    try: # Ipython seem to require different tqdm.. try..except seem to be the easiest way to check
+        __IPYTHON__
+        from tqdm.notebook import tqdm
+    except:
+        from tqdm import tqdm
+except Exception as e:
+    print(e)
+    print(
+        "install tqdm (conda install tqdm, or pip install tqdm) to get nice progress bars. "
+    )
 
-#     def tqdm(iterable, *args, **kwargs):
-#         return iterable
+    def tqdm(iterable, *args, **kwargs):
+        return iterable
+    
 
 from eskf import (
     ESKF,
@@ -185,13 +186,13 @@ dummy = eskf.update_GNSS_position(x_pred[0], P_pred[0], z_GNSS[0], R_GNSS, lever
 # %% Run estimation
 # run this file with 'python -O run_INS_simulated.py' to turn of assertions and get about 8/5 speed increase for longer runs
 
-N: int = steps # TODO: choose a small value to begin with (500?), and gradually increase as you OK results
-doGNSS: bool = True  # TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts
+N: int = 5000 # TODO: choose a small value to begin with (500?), and gradually increase as you OK results
+doGNSS: bool = False  # TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts
 
 GNSSk: int = 0  # keep track of current step in GNSS measurements
 for k in tqdm.trange(N):
     if doGNSS and timeIMU[k] >= timeGNSS[GNSSk]:
-        NIS[GNSSk] = eskf.NIS_GNSS_position(x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
+        NIS[GNTrueSSk] = eskf.NIS_GNSS_position(x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
 
         x_est[k], P_est[k] = eskf.update_GNSS_position(x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
         assert np.all(np.isfinite(P_est[k])), f"Not finite P_pred at index {k}"
