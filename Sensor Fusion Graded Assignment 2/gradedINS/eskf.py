@@ -119,8 +119,9 @@ class ESKF:
         velocity_prediction = velocity + Ts*(R @ acceleration + ESKF.g) 
         
         k = Ts*omega
-        qr = np.array([np.cos(np.linalg.norm(k)/2), np.sin(np.linalg.norm(k)/2)*k/np.linalg.norm(k)])
-        quaternion_prediction = quaternion_product(quaternion, qr)
+        k_norm = la.norm(k)
+        qr = np.array([np.cos(k_norm/2), *(np.sin(k_norm/2)) *k.T / k_norm])
+        quaternion_prediction = quaternion_product(quaternion, qr) 
 
         # Normalize quaternion
         quaternion_prediction = np.linalg.norm(quaternion_prediction) 
@@ -257,7 +258,7 @@ class ESKF:
         A = self.Aerr(x_nominal, acceleration, omega)
         G = self.Gerr(x_nominal)
 
-        V = np.array((-A, G*self.Q_err*np.linalg.inv(G)),(np.zeros(15), np.linalg.inv(A)))*Ts  #np.zeros((30, 30))
+        V = np.block([[-A, G @ self.Q_err @ np.linalg.inv(G)],[np.zeros(15), np.linalg.inv(A)]])*Ts  #np.zeros((30, 30))
         assert V.shape == (
             30,
             30,
@@ -269,7 +270,7 @@ class ESKF:
         
 
         Ad = np.linalg.inv(V[IDX1*IDX1])
-        GQGd = Ad * V[IDX1*IDX2]
+        GQGd = Ad @ V[IDX1*IDX2]
 
         assert Ad.shape == (
             15,
@@ -322,7 +323,7 @@ class ESKF:
 
         Ad, GQGd = self.discrete_error_matrices(x_nominal, acceleration, omega, Ts)
 
-        P_predicted = Ad*P*np.linalg.inv(Ad) + GQGd #np.zeros((15, 15))
+        P_predicted = Ad @ P @ np.linalg.inv(Ad) + GQGd #np.zeros((15, 15))
 
         assert P_predicted.shape == (
             15,
@@ -439,7 +440,7 @@ class ESKF:
 
         # Covariance
         G_injected = la.block_diag(np.identity(6), np.identity(3)-cross_product_matrix(0.5*delta_x[INJ_IDX]), np.identity(6)) #np.zeros((1,))  # TODO: Compensate for injection in the covariances
-        P_injected = G_injected*P*np.linalg.inv(G_injected) # TODO: Compensate for injection in the covariances
+        P_injected = G_injected @ P @ np.linalg.inv(G_injected) # TODO: Compensate for injection in the covariances
 
         assert x_injected.shape == (
             16,
