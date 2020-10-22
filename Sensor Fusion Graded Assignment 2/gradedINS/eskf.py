@@ -115,11 +115,11 @@ class ESKF:
 
         R = quaternion_to_rotation_matrix(quaternion, debug=self.debug)
 
-        position_prediction = position + velocity*Ts + 1/2*(R*acceleration + ESKF.g)*Ts^2  
-        velocity_prediction = velocity + (R*acceleration + ESKF.g)*Ts 
+        position_prediction = position + velocity*Ts + 0.5*Ts**2 * (R @ acceleration + ESKF.g)  
+        velocity_prediction = velocity + Ts*(R @ acceleration + ESKF.g) 
         
         k = Ts*omega
-        qr = np.array([cos(np.linalg.norm(k)/2), sin(np.linalg.norm(k)/2)*k/np.linalg.norm(k)])
+        qr = np.array([np.cos(np.linalg.norm(k)/2), np.sin(np.linalg.norm(k)/2)*k/np.linalg.norm(k)])
         quaternion_prediction = quaternion_product(quaternion, qr)
 
         # Normalize quaternion
