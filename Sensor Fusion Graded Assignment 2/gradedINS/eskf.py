@@ -668,9 +668,15 @@ class ESKF:
         delta_position = x_true[POS_IDX] - x_nominal[POS_IDX]  # TODO: Delta position
         delta_velocity = x_true[VEL_IDX] - x_nominal[VEL_IDX]  # TODO: Delta velocity
 
-        quaternion_conj = quaternion_product(quaternion_conj, x_true[ATT_IDX])  # TODO: Conjugate of quaternion
 
-        delta_quaternion = np.array([1, 0, 0, 0])  # TODO: Error quaternion
+        q_n = x_nominal[6:10] #nominal
+        q_t = x_true[6:10] #true
+        
+        quaternion_conj = np.hstack([q_n[0],-q_n[1:]]) # TODO: Conjugate of quaternion
+
+        
+        delta_quaternion = quaternion_product(quaternion_conj,q_t)/np.linalg.norm(quaternion_product(quaternion_conj,q_t))  # TODO: Error quaternion
+        #delta_quaternion = np.array([1, 0, 0, 0])  # TODO: Error quaternion
         delta_theta = 2 * delta_quaternion[1:]
 
         # Concatenation of bias indices

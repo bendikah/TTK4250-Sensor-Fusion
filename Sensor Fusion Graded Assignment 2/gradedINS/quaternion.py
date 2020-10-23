@@ -114,9 +114,12 @@ def quaternion_to_euler(quaternion: np.ndarray) -> np.ndarray:
     quaternion_squared = quaternion ** 2
     
     #Eq. 10.38 from the book
-    phi = math.atan2(2@(quaternion[3,:] @ quaternion[2,:] + quaternion[0,:] @ quaternion[1,:] ), quaternion_squared[1,:] - quaternion_squared[1,:] - quaternion_squared[2,:] + quaternion_squared[3,:])  # TODO: Convert from quaternion to euler angles
-    theta = math.asin(2 @ (quaternion[0,:] @ quaternion[2,:] - quaternion[1,:] @ quaternion[3,:])) # TODO: Convert from quaternion to euler angles
-    psi = math.atan2(2@(quaternion[0,:] @ quaternion[2,:] + quaternion[0,:] @ quaternion[2,:] ), quaternion_squared[1,:] + quaternion_squared[1,:] - quaternion_squared[2,:] - quaternion_squared[3,:]) # TODO: Convert from quaternion to euler angles
+    #phi = math.atan2(2@(quaternion[3,:] @ quaternion[2,:] + quaternion[0,:] @ quaternion[1,:] ), quaternion_squared[1,:] - quaternion_squared[1,:] - quaternion_squared[2,:] + quaternion_squared[3,:])  # TODO: Convert from quaternion to euler angles
+    phi = np.arctan2(2*(quaternion[3]*quaternion[2]) + quaternion[0]*quaternion[1], quaternion_squared[0] - quaternion_squared[1] - quaternion_squared[2] + quaternion_squared[3])
+    #theta = math.asin(2 @ (quaternion[0,:] @ quaternion[2,:] - quaternion[1,:] @ quaternion[3,:])) # TODO: Convert from quaternion to euler angles
+    theta = np.arcsin(2 * (quaternion[0]*quaternion[2]) - quaternion[1]*quaternion[3])
+    #psi = math.atan2(2@(quaternion[0,:] @ quaternion[2,:] + quaternion[0,:] @ quaternion[2,:] ), quaternion_squared[1,:] + quaternion_squared[1,:] - quaternion_squared[2,:] - quaternion_squared[3,:]) # TODO: Convert from quaternion to euler angles
+    psi = np.arctan2(2*(quaternion[1]*quaternion[2]) + quaternion[0]*quaternion[3], quaternion_squared[0] + quaternion_squared[1] - quaternion_squared[2] - quaternion_squared[3])
     #Dont think this will work at first try.
 
     euler_angles = np.array([phi, theta, psi])
