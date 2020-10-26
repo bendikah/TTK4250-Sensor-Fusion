@@ -189,8 +189,8 @@ dummy = eskf.update_GNSS_position(x_pred[0], P_pred[0], z_GNSS[0], R_GNSS, lever
 # %% Run estimation
 # run this file with 'python -O run_INS_simulated.py' to turn of assertions and get about 8/5 speed increase for longer runs
 
-N: int = 5000 # TODO: choose a small value to begin with (500?), and gradually increase as you OK results
-doGNSS: bool = False  # TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts
+N: int = 500 # TODO: choose a small value to begin with (500?), and gradually increase as you OK results
+doGNSS: bool = True  # TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts
 
 GNSSk: int = 0  # keep track of current step in GNSS measurements
 for k in tqdm(range(N)):
@@ -198,6 +198,7 @@ for k in tqdm(range(N)):
         NIS[GNSSk] = eskf.NIS_GNSS_position(x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
         #NIS[GNTrueSSk]
         x_est[k], P_est[k] = eskf.update_GNSS_position(x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
+        
         assert np.all(np.isfinite(P_est[k])), f"Not finite P_pred at index {k}"
 
         GNSSk += 1
@@ -333,7 +334,7 @@ fig4, axs4 = plt.subplots(2, 1, num=4, clear=True)
 axs4[0].plot(t, np.linalg.norm(delta_x[:N, POS_IDX], axis=1))
 axs4[0].plot(
     np.arange(0, N, 100) * dt,
-    np.linalg.norm(x_true[99:N:100, :3] - z_GNSS[:GNSSk], axis=1),#:3 instead of POS_IDX?
+    np.linalg.norm(x_true[99:100:N, :3] - z_GNSS[:GNSSk], axis=1),#:3 instead of POS_IDX?
 )
 axs4[0].set(ylabel="Position error [m]")
 axs4[0].legend(
