@@ -300,9 +300,9 @@ axs3[2].plot(t, eul_error)
 axs3[2].set(ylabel="Euler angles error [deg]")
 axs3[2].legend(
     [
-        rf"$\phi$ ({np.sqrt(np.mean((eul_error[:N, 0] * 180 / np.pi)**2))})",
-        rf"$\theta$ ({np.sqrt(np.mean((eul_error[:N, 1] * 180 / np.pi)**2))})",
-        rf"$\psi$ ({np.sqrt(np.mean((eul_error[:N, 2] * 180 / np.pi)**2))})",
+        rf"$\phi$ ({np.sqrt(np.mean((eul_error[:N, 0])**2))})", #TODO: changed after reading forum post
+        rf"$\theta$ ({np.sqrt(np.mean((eul_error[:N, 1])**2))})", #same here
+        rf"$\psi$ ({np.sqrt(np.mean((eul_error[:N, 2])**2))})", #same here
     ]
 )
 
@@ -310,9 +310,9 @@ axs3[3].plot(t, delta_x[:N, ERR_ACC_BIAS_IDX])
 axs3[3].set(ylabel="Accl bias error [m/s^2]")
 axs3[3].legend(
     [
-        f"$x$ ({np.sqrt(np.mean(delta_x[:N, 12]**2))})",
-        f"$y$ ({np.sqrt(np.mean(delta_x[:N, 13]**2))})",
-        f"$z$ ({np.sqrt(np.mean(delta_x[:N, 14]**2))})",
+        f"$x$ ({np.sqrt(np.mean(delta_x[:N, 9]**2))})",
+        f"$y$ ({np.sqrt(np.mean(delta_x[:N, 10]**2))})",
+        f"$z$ ({np.sqrt(np.mean(delta_x[:N, 11]**2))})",
     ]
 )
 
@@ -346,7 +346,8 @@ axs4[0].legend(
 
 axs4[1].plot(t, np.linalg.norm(delta_x[:N, VEL_IDX], axis=1))
 axs4[1].set(ylabel="Speed error [m/s]")
-axs4[1].legend([f"RMSE: {np.sqrt(np.mean(np.sum(delta_x[:N, VEL_IDX]**2, axis=0)))}"])
+axs4[1].legend([f"RMSE: {np.sqrt(np.mean(np.sum(delta_x[:N, VEL_IDX]**2, axis=1)))}"])
+#TODO: changed after reading forum post
 
 
 # %% Consistency
