@@ -11,7 +11,7 @@ import eskf
 try: # see if tqdm is available, otherwise define it as a dummy
     try: # Ipython seem to require different tqdm.. try..except seem to be the easiest way to check
         __IPYTHON__
-        from tqdm.notebook import tqdm
+        from tqdm import tqdm
     except:
         from tqdm import tqdm
 except Exception as e:
