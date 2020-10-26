@@ -178,13 +178,13 @@ class ESKF:
         A = np.zeros((15, 15))
 
         # Set submatrices
-        A[POS_IDX * VEL_IDX] = np.identity(3)
-        A[VEL_IDX * ERR_ATT_IDX] = -R*cross_product_matrix(acceleration)
+        A[POS_IDX * VEL_IDX] = np.eye(3)
+        A[VEL_IDX * ERR_ATT_IDX] = -R @ cross_product_matrix(acceleration)
         A[VEL_IDX * ERR_ACC_BIAS_IDX] = -R
         A[ERR_ATT_IDX * ERR_ATT_IDX] = -cross_product_matrix(omega)
-        A[ERR_ATT_IDX * ERR_GYRO_BIAS_IDX] = -np.identity(3)
-        A[ERR_ACC_BIAS_IDX * ERR_ACC_BIAS_IDX] = -self.p_acc*np.identity(3)
-        A[ERR_GYRO_BIAS_IDX * ERR_GYRO_BIAS_IDX] = -self.p_gyro*np.identity(3)
+        A[ERR_ATT_IDX * ERR_GYRO_BIAS_IDX] = -np.eye(3)
+        A[ERR_ACC_BIAS_IDX * ERR_ACC_BIAS_IDX] = -self.p_acc * np.eye(3)
+        A[ERR_GYRO_BIAS_IDX * ERR_GYRO_BIAS_IDX] = -self.p_gyro * np.eye(3)
 
         # Bias correction
         A[VEL_IDX * ERR_ACC_BIAS_IDX] = A[VEL_IDX * ERR_ACC_BIAS_IDX] @ self.S_a
