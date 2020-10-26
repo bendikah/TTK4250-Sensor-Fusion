@@ -327,7 +327,7 @@ class ESKF:
 
         Ad, GQGd = self.discrete_error_matrices(x_nominal, acceleration, omega, Ts)
 
-        P_predicted = Ad @ P @ np.linalg.inv(Ad) + GQGd #np.zeros((15, 15))
+        P_predicted = Ad @ P @ Ad.T + GQGd #np.zeros((15, 15))
 
         assert P_predicted.shape == (
             15,
@@ -731,10 +731,9 @@ class ESKF:
         return NEESes
 
     @classmethod
-    def _NEES(cls, diff, P):
-        NEES = 0  # TODO: NEES
+    def _NEES(cls, P, diff):
+        NEES = diff @ la.solve(P, diff)
         assert NEES >= 0, "ESKF._NEES: negative NEES"
         return NEES
-
 
 # %%
