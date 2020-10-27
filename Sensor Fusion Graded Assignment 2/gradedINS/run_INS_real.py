@@ -92,7 +92,7 @@ except Exception as e:
 filename_to_load = "task_real.mat"
 loaded_data = scipy.io.loadmat(filename_to_load)
 
-do_corrections = True # TODO: set to false for the last task
+do_corrections = False # TODO: set to false for the last task
 if do_corrections:
     S_a = loaded_data['S_a']
     S_g = loaded_data['S_g']
@@ -114,24 +114,24 @@ gnss_steps = len(z_GNSS)
 
 # %% Measurement noise
 # Continous noise
-cont_gyro_noise_std = 4.36e-5  # (rad/s)/sqrt(Hz)
-cont_acc_noise_std = 1.167e-3  # (m/s**2)/sqrt(Hz)
+cont_gyro_noise_std =  6.9e-6  # (rad/s)/sqrt(Hz)
+cont_acc_noise_std = 1.58e-1  # (m/s**2)/sqrt(Hz)
 
 # Discrete sample noise at simulation rate used
 rate_std = cont_gyro_noise_std*np.sqrt(1/dt)
 acc_std  = cont_acc_noise_std*np.sqrt(1/dt)
 
 # Bias values
-rate_bias_driving_noise_std = 5e-5
+rate_bias_driving_noise_std = 5e-6
 cont_rate_bias_driving_noise_std = rate_bias_driving_noise_std/np.sqrt(1/dt)
 
-acc_bias_driving_noise_std = 4e-3
+acc_bias_driving_noise_std = 1.5e-5
 cont_acc_bias_driving_noise_std = acc_bias_driving_noise_std/np.sqrt(1/dt)
 
 # Position and velocity measurement
-p_acc = 1e-16
+p_acc = 1
 
-p_gyro = 1e-16
+p_gyro = 4e-3
 
 # %% Estimator
 eskf = ESKF(
@@ -165,17 +165,18 @@ x_pred[0, ATT_IDX] = np.array([
     np.sin(45 * np.pi / 180)
 ])  # nose to east, right to south and belly down.
 
-P_pred[0][POS_IDX**2] = 10**2 * np.eye(3)
-P_pred[0][VEL_IDX**2] = 3**2 * np.eye(3)
-P_pred[0][ERR_ATT_IDX**2] = (np.pi/30)**2 * np.eye(3) # error rotation vector (not quat)
-P_pred[0][ERR_ACC_BIAS_IDX**2] = 0.05**2 * np.eye(3)
-P_pred[0][ERR_GYRO_BIAS_IDX**2] = (1e-3)**2 * np.eye(3)
 Ts_IMU = [0, *np.diff(timeIMU)]
+
+P_pred[0][POS_IDX ** 2] = 10**2 * np.eye(3)
+P_pred[0][VEL_IDX ** 2] = 10**2 * np.eye(3)
+P_pred[0][ERR_ATT_IDX ** 2] = 0.008 * np.eye(3)
+P_pred[0][ERR_ACC_BIAS_IDX ** 2] = 0.005 * np.eye(3)
+P_pred[0][ERR_GYRO_BIAS_IDX ** 2] = 0.005 * np.eye(3)
 
 # %% Run estimation
 
-start = 52000
-N = 10000 #steps
+start = 0
+N = 920535 #steps
 
 startGNSS = int(start*dt)
 
@@ -258,14 +259,14 @@ plt.grid()
 fig2.suptitle('States estimates')
 
 # %% Consistency
-confprob = 0.95
+confprob = 0.8
 CI3 = np.array(scipy.stats.chi2.interval(confprob, 3)).reshape((2, 1))
 
 fig3 = plt.figure()
 
 plt.plot(NIS[:GNSSk])
 plt.plot(np.array([0, N-1]) * dt, (CI3@np.ones((1, 2))).T)
-insideCI = np.mean((CI3[0] <= NIS) * (NIS <= CI3[1]))
+insideCI = np.mean((CI3[0] <= NIS[:GNSSk]) * (NIS[GNSSk] <= CI3[1]))
 plt.title(f'NIS ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)')
 plt.grid()
 
