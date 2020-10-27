@@ -230,6 +230,7 @@ fig1 = plt.figure(1)
 ax = plt.axes(projection="3d")
 
 ax.plot3D(x_est[:N, 1], x_est[:N, 0], -x_est[:N, 2])
+ax.plot3D(x_true[:N, 1], x_true[:N, 0], -x_true[:N, 2])
 
 ax.plot3D(z_GNSS[:GNSSk, 1], z_GNSS[:GNSSk, 0], -z_GNSS[:GNSSk, 2])
 ax.set_xlabel("East [m]")
@@ -335,7 +336,7 @@ fig4, axs4 = plt.subplots(2, 1, num=4, clear=True)
 axs4[0].plot(t, np.linalg.norm(delta_x[:N, POS_IDX], axis=1))
 axs4[0].plot(
     np.arange(0, N, 100) * dt,
-    np.linalg.norm(x_true[99:N:100, :POS_IDX] - z_GNSS[:GNSSk], axis=1),#:3 instead of POS_IDX?
+    np.linalg.norm(x_true[99:N:100, :3] - z_GNSS[:GNSSk], axis=1),#:3 instead of POS_IDX?
 )
 axs4[0].set(ylabel="Position error [m]")
 axs4[0].legend(
