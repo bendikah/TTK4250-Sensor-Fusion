@@ -95,7 +95,9 @@ filename_to_load = "task_simulation.mat"
 loaded_data = scipy.io.loadmat(filename_to_load)
 
 S_a = loaded_data["S_a"]
+print("S_a = ", S_a)
 S_g = loaded_data["S_g"]
+print("S_g = ", S_g)
 lever_arm = loaded_data["leverarm"].ravel()
 timeGNSS = loaded_data["timeGNSS"].ravel()
 timeIMU = loaded_data["timeIMU"].ravel()
@@ -179,7 +181,7 @@ x_pred[0, 6] = 1  # no initial rotation: nose to North, right to East, and belly
 # These have to be set reasonably to get good results
 P_pred[0][POS_IDX ** 2] = 10**2 * np.eye(3)
 P_pred[0][VEL_IDX ** 2] = 10**2 * np.eye(3)
-P_pred[0][ERR_ATT_IDX ** 2] = np.eye(3)
+P_pred[0][ERR_ATT_IDX ** 2] = 0.05 * np.eye(3)
 P_pred[0][ERR_ACC_BIAS_IDX ** 2] = 0.01 * np.eye(3)
 P_pred[0][ERR_GYRO_BIAS_IDX ** 2] = 0.01 * np.eye(3)
 
