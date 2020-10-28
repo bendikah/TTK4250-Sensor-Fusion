@@ -120,8 +120,8 @@ cont_gyro_noise_std = 4.36e-5  # (rad/s)/sqrt(Hz)
 cont_acc_noise_std = 1.167e-3  # (m/s**2)/sqrt(Hz)
 
 # Discrete sample noise at simulation rate used
-rate_std = 0.5 * cont_gyro_noise_std * np.sqrt(1 / dt)
-acc_std = 0.5 * cont_acc_noise_std * np.sqrt(1 / dt)
+rate_std = 0.6 * 0.5 * cont_gyro_noise_std * np.sqrt(1 / dt)
+acc_std = 0.6 * 0.5 * cont_acc_noise_std * np.sqrt(1 / dt)
 
 # Bias values
 rate_bias_driving_noise_std = 5e-5
@@ -133,24 +133,28 @@ acc_bias_driving_noise_std = 4e-2
 cont_acc_bias_driving_noise_std = 6 * acc_bias_driving_noise_std / np.sqrt(1 / dt)
 
 # Position and velocity measurement
-p_std = np.array([0.3, 0.3, 0.5])  # Measurement noise
+p_std = np.array([0.35, 0.35, 0.51])  # Measurement noise
 R_GNSS = np.diag(p_std ** 2)
 
-p_acc = 1e-16
+p_acc = 0 #is setting these to zero problematic?
+p_gyro = 0
 
-p_gyro = 1e-16
+print("q_acc,n = ", acc_std)
+print("q_gyro,n = ", rate_std)
+print("q_acc,b = ", cont_acc_bias_driving_noise_std)
+print("q_gyro,b = ", cont_acc_noise_std)
 
 # %% Estimator
 eskf = ESKF(
-    acc_std,
-    rate_std,
-    cont_acc_bias_driving_noise_std,
-    cont_rate_bias_driving_noise_std,
+    acc_std, #q_acc,n
+    rate_std, #q_gyro,n
+    cont_acc_bias_driving_noise_std, #q_acc,b
+    cont_rate_bias_driving_noise_std, #q_gyro,b
     p_acc,
     p_gyro,
-    S_a=S_a, # set the accelerometer correction matrix
-    S_g=S_g, # set the gyro correction matrix,
-    debug=True # TODO: False to avoid expensive debug checks, can also be suppressed by calling 'python -O run_INS_simulated.py'
+    S_a=np.eye(3), # set the accelerometer correction matrix
+    S_g=np.eye(3), # set the gyro correction matrix,
+    debug=False # TODO: False to avoid expensive debug checks, can also be suppressed by calling 'python -O run_INS_simulated.py'
 )
 
 # %% Allocate
@@ -177,11 +181,11 @@ x_pred[0, VEL_IDX] = np.array([20, 0, 0])  # starting at 20 m/s due north
 x_pred[0, 6] = 1  # no initial rotation: nose to North, right to East, and belly down
 
 # These have to be set reasonably to get good results
-P_pred[0][POS_IDX ** 2] = 100 * np.eye(3)
+P_pred[0][POS_IDX ** 2] = 200 * np.eye(3)
 P_pred[0][VEL_IDX ** 2] = 100 * np.eye(3)
 P_pred[0][ERR_ATT_IDX ** 2] = 0.05 * np.eye(3)
-P_pred[0][ERR_ACC_BIAS_IDX ** 2] = 0.01 * np.eye(3)
-P_pred[0][ERR_GYRO_BIAS_IDX ** 2] = 0.01 * np.eye(3)
+P_pred[0][ERR_ACC_BIAS_IDX ** 2] = 0.009 * np.eye(3)
+P_pred[0][ERR_GYRO_BIAS_IDX ** 2] = 0.009 * np.eye(3)
 
 # %% Test: you can run this cell to test your implementation
 #dummy = eskf.predict(x_pred[0], P_pred[0], z_acceleration[0], z_gyroscope[0], dt)
