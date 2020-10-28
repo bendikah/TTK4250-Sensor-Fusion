@@ -169,31 +169,19 @@ Ts_IMU = [0, *np.diff(timeIMU)]
 
 P_pred[0][POS_IDX ** 2] = 10**2 * np.eye(3)
 P_pred[0][VEL_IDX ** 2] = 10**2 * np.eye(3)
-P_pred[0][ERR_ATT_IDX ** 2] = 0.008 * np.eye(3)
+P_pred[0][ERR_ATT_IDX ** 2] = (np.pi/30)**2 * np.eye(3) # error rotation vector (not quat)
 P_pred[0][ERR_ACC_BIAS_IDX ** 2] = 0.005 * np.eye(3)
 P_pred[0][ERR_GYRO_BIAS_IDX ** 2] = 0.005 * np.eye(3)
 
 # %% Run estimation
 
-start = 0
-N = 920535 #steps
-
-startGNSS = int(start*dt)
-
-timeGNSS = timeGNSS[startGNSS:]
-timeIMU = timeIMU[start:]
-z_acceleration = z_acceleration[start:]
-z_GNSS = z_GNSS[startGNSS:]
-z_gyroscope = z_gyroscope[start:]
-accuracy_GNSS = accuracy_GNSS[startGNSS:]
-Ts_IMU = Ts_IMU[start:]
-
+N = 900000 #steps
 GNSSk = 0
 
 for k in tqdm(range(N)):
     if timeIMU[k] >= timeGNSS[GNSSk]:
-        R_GNSS = accuracy_GNSS[GNSSk]**2 * np.diag([1,1,1]) # Current GNSS covariance
-        NIS[GNSSk] = eskf.NIS_GNSS_position(x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)# TODO
+        R_GNSS = accuracy_GNSS[GNSSk]**2 * np.diag([1,1,1]) #Current GNSS covariance
+        NIS[GNSSk] = eskf.NIS_GNSS_position(x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
 
         x_est[k], P_est[k] = eskf.update_GNSS_position(x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
         if eskf.debug:
@@ -218,10 +206,10 @@ fig1 = plt.figure(1)
 ax = plt.axes(projection='3d')
 
 ax.plot3D(x_est[0:N, 1], x_est[0:N, 0], -x_est[0:N, 2])
-ax.plot3D(z_GNSS[0:GNSSk, 1], z_GNSS[0:GNSSk, 0], -z_GNSS[0:GNSSk, 2]) #TODO: read forum post
-ax.set_xlabel('East [m]') #same
-ax.set_ylabel('North [m]') #same
-ax.set_zlabel('Altitude [m]') #same
+ax.plot3D(z_GNSS[0:GNSSk, 1], z_GNSS[0:GNSSk, 0], -z_GNSS[0:GNSSk, 2]) 
+ax.set_xlabel('East [m]')
+ax.set_ylabel('North [m]') 
+ax.set_zlabel('Altitude [m]') 
 
 plt.grid()
 
