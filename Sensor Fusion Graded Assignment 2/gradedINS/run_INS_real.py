@@ -129,9 +129,8 @@ acc_bias_driving_noise_std = 1.5e-5
 cont_acc_bias_driving_noise_std = acc_bias_driving_noise_std/np.sqrt(1/dt)
 
 # Position and velocity measurement
-p_acc = 1
-
-p_gyro = 4e-3
+p_acc = 0
+p_gyro = 0
 
 # %% Estimator
 eskf = ESKF(
@@ -175,7 +174,7 @@ P_pred[0][ERR_GYRO_BIAS_IDX ** 2] = 0.005 * np.eye(3)
 
 # %% Run estimation
 
-N = 900000 #steps
+N = 90000 #steps
 GNSSk = 0
 
 for k in tqdm(range(N)):
@@ -247,7 +246,7 @@ plt.grid()
 fig2.suptitle('States estimates')
 
 # %% Consistency
-confprob = 0.8
+confprob = 0.95
 CI3 = np.array(scipy.stats.chi2.interval(confprob, 3)).reshape((2, 1))
 
 fig3 = plt.figure()
