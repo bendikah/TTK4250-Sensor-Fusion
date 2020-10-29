@@ -5,6 +5,8 @@ import scipy.stats
 
 import matplotlib
 import matplotlib.pyplot as plt
+matplotlib.rc('xtick', labelsize=15) 
+matplotlib.rc('ytick', labelsize=15) 
 import numpy as np
 import eskf
 
@@ -228,7 +230,6 @@ for k in tqdm(range(N)):
 
 
 # %% Plots
-
 fig1 = plt.figure(1)
 ax = plt.axes(projection="3d")
 
@@ -250,31 +251,33 @@ eul_true = np.apply_along_axis(quaternion_to_euler, 1, x_true[:N, ATT_IDX])
 
 fig2, axs2 = plt.subplots(5, 1, num=2, clear=True)
 
+
 axs2[0].plot(t, x_est[:N, POS_IDX])
-axs2[0].set_ylabel("NED position [m]",fontsize=18)
-axs2[0].legend(["North", "East", "Down"],fontsize=15,loc="right")
+axs2[0].set_ylabel("NED position [m]",fontsize=25)
+axs2[0].legend(["North", "East", "Down"],fontsize=25,loc="right")
 axs2[0].yaxis.set_label_position("left")
 
 axs2[1].plot(t, x_est[:N, VEL_IDX])
-axs2[1].set_ylabel("Velocities [m/s]",fontsize=18)
-axs2[1].legend(["North", "East", "Down"],fontsize=15,loc="right")
+axs2[1].set_ylabel("Velocities [m/s]",fontsize=25)
+axs2[1].legend(["North", "East", "Down"],fontsize=25,loc="right")
 axs2[1].yaxis.set_label_position("right")
 
+
 axs2[2].plot(t, eul[:N] * 180 / np.pi)
-axs2[2].set_ylabel("Euler angles [deg]",fontsize=18)
-axs2[2].legend([r"$\phi$", r"$\theta$", r"$\psi$"],fontsize=15,loc="right")
+axs2[2].set_ylabel("Euler angles [deg]",fontsize=25)
+axs2[2].legend([r"$\phi$", r"$\theta$", r"$\psi$"],fontsize=25,loc="right")
 axs2[2].yaxis.set_label_position("left")
 
 
 axs2[3].plot(t, x_est[:N, ACC_BIAS_IDX])
-axs2[3].set_ylabel("Accl bias [m/s^2]",fontsize=18)
-axs2[3].legend(["$x$", "$y$", "$z$"],fontsize=15,loc="right")
+axs2[3].set_ylabel("Accl bias [m/s^2]",fontsize=25)
+axs2[3].legend(["$x$", "$y$", "$z$"],fontsize=25,loc="right")
 axs2[3].yaxis.set_label_position("right")
 
 
 axs2[4].plot(t, x_est[:N, GYRO_BIAS_IDX] * 180 / np.pi * 3600)
-axs2[4].set_ylabel("Gyro bias [deg/h]",fontsize=18)
-axs2[4].legend(["$x$", "$y$", "$z$"],fontsize=15,loc="right")
+axs2[4].set_ylabel("Gyro bias [deg/h]",fontsize=25)
+axs2[4].legend(["$x$", "$y$", "$z$"],fontsize=25,loc="right")
 axs2[4].yaxis.set_label_position("left")
 
 
@@ -284,65 +287,65 @@ fig2.suptitle("States estimates",fontsize=35)
 fig3, axs3 = plt.subplots(5, 1, num=3, clear=True)
 delta_x_RMSE = np.sqrt(np.mean(delta_x[:N] ** 2, axis=0))  # TODO use this in legends
 axs3[0].plot(t, delta_x[:N, POS_IDX])
-axs3[0].set_ylabel("NED position error [m]",fontsize=18)
+axs3[0].set_ylabel("NED position error [m]",fontsize=22)
 axs3[0].yaxis.set_label_position("left")
 axs3[0].legend(
     [
-        f"North ({np.sqrt(np.mean(delta_x[:N, POS_IDX[0]]**2))})",
-        f"East ({np.sqrt(np.mean(delta_x[:N, POS_IDX[1]]**2))})",
-        f"Down ({np.sqrt(np.mean(delta_x[:N, POS_IDX[2]]**2))})",
-    ],fontsize=15,loc="right"
+        f"North ({round(np.sqrt(np.mean(delta_x[:N, POS_IDX[0]]**2)),3)})",
+        f"East ({round(np.sqrt(np.mean(delta_x[:N, POS_IDX[1]]**2)),3)})",
+        f"Down ({round(np.sqrt(np.mean(delta_x[:N, POS_IDX[2]]**2)),3)})",
+    ],fontsize=25,loc="right"
     
 )
 
 axs3[1].plot(t, delta_x[:N, VEL_IDX])
-axs3[1].set_ylabel("Velocities error [m]",fontsize=18)
+axs3[1].set_ylabel("Velocities error [m]",fontsize=22)
 axs3[1].yaxis.set_label_position("right")
 axs3[1].legend(
     [
-        f"North ({np.sqrt(np.mean(delta_x[:N, VEL_IDX[0]]**2))})",
-        f"East ({np.sqrt(np.mean(delta_x[:N, VEL_IDX[1]]**2))})",
-        f"Down ({np.sqrt(np.mean(delta_x[:N, VEL_IDX[2]]**2))})",
-    ],fontsize=15,loc="right"
+        f"North ({round(np.sqrt(np.mean(delta_x[:N, VEL_IDX[0]]**2)),3)})",
+        f"East ({round(np.sqrt(np.mean(delta_x[:N, VEL_IDX[1]]**2)),3)})",
+        f"Down ({round(np.sqrt(np.mean(delta_x[:N, VEL_IDX[2]]**2)),3)})",
+    ],fontsize=25,loc="right"
 )
 
 # quick wrap func
 wrap_to_pi = lambda rads: (rads + np.pi) % (2 * np.pi) - np.pi
 eul_error = wrap_to_pi(eul[:N] - eul_true[:N]) * 180 / np.pi
 axs3[2].plot(t, eul_error)
-axs3[2].set_ylabel("Euler angles error [deg]",fontsize=18)
+axs3[2].set_ylabel("Euler angles error [deg]",fontsize=22)
 axs3[2].yaxis.set_label_position("left")
 axs3[2].legend(
     [
-        rf"$\phi$ ({np.sqrt(np.mean((eul_error[:N, 0])**2))})", #TODO: changed after reading forum post
-        rf"$\theta$ ({np.sqrt(np.mean((eul_error[:N, 1])**2))})", #same here
-        rf"$\psi$ ({np.sqrt(np.mean((eul_error[:N, 2])**2))})", #same here
-    ],fontsize=15,loc="right"
+        rf"$\phi$ ({round(np.sqrt(np.mean((eul_error[:N, 0])**2)),3)})", #changed after reading forum post
+        rf"$\theta$ ({round(np.sqrt(np.mean((eul_error[:N, 1])**2)),3)})", #same here
+        rf"$\psi$ ({round(np.sqrt(np.mean((eul_error[:N, 2])**2)),3)})", #same here
+    ],fontsize=25,loc="right"
 )
 
 axs3[3].plot(t, delta_x[:N, ERR_ACC_BIAS_IDX])
-axs3[3].set_ylabel("Accl bias error [m/s^2]",fontsize=18)
+axs3[3].set_ylabel("Accl bias error [m/s^2]",fontsize=22)
 axs3[3].yaxis.set_label_position("right")
 axs3[3].legend(
     [
-        f"$x$ ({np.sqrt(np.mean(delta_x[:N, ERR_ACC_BIAS_IDX[0]]**2))})",
-        f"$y$ ({np.sqrt(np.mean(delta_x[:N, ERR_ACC_BIAS_IDX[1]]**2))})",
-        f"$z$ ({np.sqrt(np.mean(delta_x[:N, ERR_ACC_BIAS_IDX[2]]**2))})",
-    ],fontsize=15,loc="right"
+        f"$x$ ({round(np.sqrt(np.mean(delta_x[:N, ERR_ACC_BIAS_IDX[0]]**2)),3)})",
+        f"$y$ ({round(np.sqrt(np.mean(delta_x[:N, ERR_ACC_BIAS_IDX[1]]**2)),3)})",
+        f"$z$ ({round(np.sqrt(np.mean(delta_x[:N, ERR_ACC_BIAS_IDX[2]]**2)),3)})",
+    ],fontsize=25,loc="right"
 )
 
 axs3[4].plot(t, delta_x[:N, ERR_GYRO_BIAS_IDX] * 180 / np.pi)
-axs3[4].set_ylabel("Gyro bias error [deg/s]",fontsize=18)
+axs3[4].set_ylabel("Gyro bias error [deg/s]",fontsize=22)
 axs3[4].yaxis.set_label_position("left")
 axs3[4].legend(
     [
-        f"$x$ ({np.sqrt(np.mean((delta_x[:N, ERR_GYRO_BIAS_IDX[0]]* 180 / np.pi)**2))})",
-        f"$y$ ({np.sqrt(np.mean((delta_x[:N, ERR_GYRO_BIAS_IDX[1]]* 180 / np.pi)**2))})",
-        f"$z$ ({np.sqrt(np.mean((delta_x[:N, ERR_GYRO_BIAS_IDX[2]]* 180 / np.pi)**2))})",
-    ],fontsize=15,loc="right"
+        f"$x$ ({round(np.sqrt(np.mean((delta_x[:N, ERR_GYRO_BIAS_IDX[0]]* 180 / np.pi)**2)),3)})",
+        f"$y$ ({round(np.sqrt(np.mean((delta_x[:N, ERR_GYRO_BIAS_IDX[1]]* 180 / np.pi)**2)),3)})",
+        f"$z$ ({round(np.sqrt(np.mean((delta_x[:N, ERR_GYRO_BIAS_IDX[2]]* 180 / np.pi)**2)),3)})",
+    ],fontsize=25,loc="right"
 )
 
-fig3.suptitle("States estimate errors",fontsize=35)
+fig3.suptitle("States estimates errors",fontsize=35)
 
 # Error distance plot
 fig4, axs4 = plt.subplots(2, 1, num=4, clear=True)
@@ -352,19 +355,19 @@ axs4[0].plot(
     np.arange(0, N, 100) * dt,
     np.linalg.norm(x_true[99:N:100, POS_IDX] - z_GNSS[:GNSSk], axis=1),#:3 instead of POS_IDX?
 )
-axs4[0].set_ylabel("Position error [m]",fontsize=25)
+axs4[0].set_ylabel("Position error [m]",fontsize=35)
 axs4[0].yaxis.set_label_position("left")
 axs4[0].legend(
     [
-        f"Estimation error ({np.sqrt(np.mean(np.sum(delta_x[:N, POS_IDX]**2, axis=1)))})",
-        f"Measurement error ({np.sqrt(np.mean(np.sum((x_true[99:N:100, POS_IDX] - z_GNSS[:GNSSk])**2, axis=1)))})",
-    ],fontsize=25,loc="right"
+        f"Estimation error ({round(np.sqrt(np.mean(np.sum(delta_x[:N, POS_IDX]**2, axis=1))),3)})",
+        f"Measurement error ({round(np.sqrt(np.mean(np.sum((x_true[99:N:100, POS_IDX] - z_GNSS[:GNSSk])**2, axis=1))),3)})",
+    ],fontsize=35,loc="upper right"
 )
 
 axs4[1].plot(t, np.linalg.norm(delta_x[:N, VEL_IDX], axis=1))
-axs4[1].set_ylabel("Speed error [m/s]",fontsize=25)
+axs4[1].set_ylabel("Speed error [m/s]",fontsize=35)
 axs4[1].yaxis.set_label_position("left")
-axs4[1].legend([f"RMSE: {np.sqrt(np.mean(np.sum(delta_x[:N, VEL_IDX]**2, axis=1)))}"],fontsize=25,loc="right")
+axs4[1].legend([f"RMSE: {round(np.sqrt(np.mean(np.sum(delta_x[:N, VEL_IDX]**2, axis=1))),3)}"],fontsize=35,loc="right")
 #changed after reading forum post
 
 fig4.suptitle("Errors in speed and position",fontsize=35)
@@ -383,7 +386,7 @@ insideCI = np.mean((CI15[0] <= NEES_all[:N]) * (NEES_all[:N] <= CI15[1]))
 axs5[0].set(
     title=f"Total NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
 )
-axs5[0].title.set(fontsize=25)
+axs5[0].title.set(fontsize=30)
 
 axs5[0].set_ylim([0, 50])
 
@@ -393,7 +396,7 @@ insideCI = np.mean((CI3[0] <= NEES_pos[:N]) * (NEES_pos[:N] <= CI3[1]))
 axs5[1].set(
     title=f"Position NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
 )
-axs5[1].title.set(fontsize=25)
+axs5[1].title.set(fontsize=30)
 axs5[1].set_ylim([0, 20])
 
 axs5[2].plot(t, (NEES_vel[0:N]).T)
@@ -402,7 +405,7 @@ insideCI = np.mean((CI3[0] <= NEES_vel[:N]) * (NEES_vel[:N] <= CI3[1]))
 axs5[2].set(
     title=f"Velocity NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
 )
-axs5[2].title.set(fontsize=25)
+axs5[2].title.set(fontsize=30)
 axs5[2].set_ylim([0, 20])
 
 axs5[3].plot(t, (NEES_att[0:N]).T)
@@ -411,7 +414,7 @@ insideCI = np.mean((CI3[0] <= NEES_att[:N]) * (NEES_att[:N] <= CI3[1]))
 axs5[3].set(
     title=f"Attitude NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
 )
-axs5[3].title.set(fontsize=25)
+axs5[3].title.set(fontsize=30)
 axs5[3].set_ylim([0, 20])
 
 axs5[4].plot(t, (NEES_accbias[0:N]).T)
@@ -420,7 +423,7 @@ insideCI = np.mean((CI3[0] <= NEES_accbias[:N]) * (NEES_accbias[:N] <= CI3[1]))
 axs5[4].set(
     title=f"Accelerometer NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
 )
-axs5[4].title.set(fontsize=25)
+axs5[4].title.set(fontsize=30)
 axs5[4].set_ylim([0, 20])
 
 axs5[5].plot(t, (NEES_gyrobias[0:N]).T)
@@ -429,7 +432,7 @@ insideCI = np.mean((CI3[0] <= NEES_gyrobias[:N]) * (NEES_gyrobias[:N] <= CI3[1])
 axs5[5].set(
     title=f"Gyro bias NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
 )
-axs5[5].title.set(fontsize=25)
+axs5[5].title.set(fontsize=30)
 axs5[5].set_ylim([0, 20])
 
 axs5[6].plot(NIS[:GNSSk])
@@ -438,7 +441,7 @@ insideCI = np.mean((CI3[0] <= NIS[:GNSSk]) * (NIS[GNSSk] <= CI3[1]))
 axs5[6].set(
     title=f"NIS ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
 )
-axs5[6].title.set(fontsize=25)
+axs5[6].title.set(fontsize=30)
 axs5[6].set_ylim([0, 20])
 
 # boxplot
