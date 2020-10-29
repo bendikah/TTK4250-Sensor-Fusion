@@ -114,23 +114,28 @@ gnss_steps = len(z_GNSS)
 
 # %% Measurement noise
 # Continous noise
-cont_gyro_noise_std =  6.9e-6  # (rad/s)/sqrt(Hz)
-cont_acc_noise_std = 1.58e-1  # (m/s**2)/sqrt(Hz)
+cont_gyro_noise_std =  15.81e-4  # (rad/s)/sqrt(Hz)
+cont_acc_noise_std = 6.90e-3  # (m/s**2)/sqrt(Hz)
 
 # Discrete sample noise at simulation rate used
 rate_std = cont_gyro_noise_std*np.sqrt(1/dt)
 acc_std  = cont_acc_noise_std*np.sqrt(1/dt)
 
 # Bias values
-rate_bias_driving_noise_std = 5e-6
+rate_bias_driving_noise_std = 15.81e-6
 cont_rate_bias_driving_noise_std = rate_bias_driving_noise_std/np.sqrt(1/dt)
 
-acc_bias_driving_noise_std = 1.5e-5
+acc_bias_driving_noise_std = 6.90e-7
 cont_acc_bias_driving_noise_std = acc_bias_driving_noise_std/np.sqrt(1/dt)
 
 # Position and velocity measurement
-p_acc = 0
-p_gyro = 0
+# Position and velocity measurement
+
+
+
+
+p_acc = 1
+p_gyro = 4e-3
 
 # %% Estimator
 eskf = ESKF(
@@ -166,20 +171,20 @@ x_pred[0, ATT_IDX] = np.array([
 
 Ts_IMU = [0, *np.diff(timeIMU)]
 
-P_pred[0][POS_IDX ** 2] = 10**2 * np.eye(3)
-P_pred[0][VEL_IDX ** 2] = 10**2 * np.eye(3)
+P_pred[0][POS_IDX ** 2] = 200**2 * np.eye(3)
+P_pred[0][VEL_IDX ** 2] = 100 * np.eye(3)
 P_pred[0][ERR_ATT_IDX ** 2] = (np.pi/30)**2 * np.eye(3) # error rotation vector (not quat)
-P_pred[0][ERR_ACC_BIAS_IDX ** 2] = 0.005 * np.eye(3)
-P_pred[0][ERR_GYRO_BIAS_IDX ** 2] = 0.005 * np.eye(3)
+P_pred[0][ERR_ACC_BIAS_IDX ** 2] = 0.009 * np.eye(3)
+P_pred[0][ERR_GYRO_BIAS_IDX ** 2] = 0.009 * np.eye(3)
 
 # %% Run estimation
 
-N = 90000 #steps
+N = 900000 #steps
 GNSSk = 0
 
 for k in tqdm(range(N)):
     if timeIMU[k] >= timeGNSS[GNSSk]:
-        R_GNSS = accuracy_GNSS[GNSSk]**2 * np.diag([1,1,1]) #Current GNSS covariance
+        R_GNSS = accuracy_GNSS[GNSSk]**2 * np.diag([0.35,0.35,0.51]) #Current GNSS covariance
         NIS[GNSSk] = eskf.NIS_GNSS_position(x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
 
         x_est[k], P_est[k] = eskf.update_GNSS_position(x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
