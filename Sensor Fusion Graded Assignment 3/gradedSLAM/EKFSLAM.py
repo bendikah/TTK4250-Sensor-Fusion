@@ -48,6 +48,8 @@ class EKFSLAM:
         xpred[0] = x[0] + u[0]*np.cos(x[2]) - u[1]*np.sin(x[2]) #TODO:is this correct
         xpred[1] = x[1] + u[0]*np.sin(x[2]) + u[1]*np.cos(x[2]) #TODO: is this correct?
         xpred[2] = x[2] + u[2]
+        
+        #TODO: make the above more efficient
 
         assert xpred.shape == (3,), "EKFSLAM.f: wrong shape for xpred"
         return xpred
@@ -67,10 +69,13 @@ class EKFSLAM:
         np.ndarray
             The Jacobian of f wrt. x.
         """
+        #TODO: wrap angles
         Fx = 0*np.eye(3)# TODO, eq (11.13)
         Fx[0] = [1, 0, -u[0]*np.sin(x[2]) - u[1]*np.cos(x[2])] #TODO:is this correct?
         Fx[1] = [0, 1, u[0]*np.cos(x[2]) - u[1]*np.sin(x[2])] #TODO: is this correct?
         Fx[2] = [0, 0, 1]#TODO: is this correct?
+        
+        #TODO: make the above more efficient/neater
 
         assert Fx.shape == (3, 3), "EKFSLAM.Fx: wrong shape"
         return Fx
@@ -94,6 +99,8 @@ class EKFSLAM:
         Fu[0] = [np.cos(x[2]), -np.sin(x[2]), 0] #TODO:is this correct?
         Fu[1] = [np.sin(x[2]), np.cos(x[2]), 0] #TODO: is this correct?
         Fu[2] = [0, 0, 1] #TODO: is this correct?
+        
+        #TODO: make more neat/efficient
         
         assert Fu.shape == (3, 3), "EKFSLAM.Fu: wrong shape"
         return Fu
@@ -128,20 +135,20 @@ class EKFSLAM:
         etapred = np.empty_like(eta)
 
         x = eta[:3]
-        etapred[:3] = # TODO robot state prediction
-        etapred[3:] = # TODO landmarks: no effect
+        etapred[:3] = self.f(x,z_odo)# TODO robot state prediction
+        etapred[3:] = eta[3:]# TODO landmarks: no effect
 
-        Fx = # TODO
-        Fu = # TODO
+        Fx = self.Fx(x, z_odo)# TODO
+        Fu = self.Fu(x, z_odo)# TODO
 
         # evaluate covariance prediction in place to save computation
         # only robot state changes, so only rows and colums of robot state needs changing
         # cov matrix layout:
         # [[P_xx, P_xm],
         # [P_mx, P_mm]]
-        P[:3, :3] = # TODO robot cov prediction
-        P[:3, 3:] = # TODO robot-map covariance prediction
-        P[3:, :3] = # TODO map-robot covariance: transpose of the above
+        P[:3, :3] = Fx@P[:3,:3]@Fx + self.Q # TODO robot cov prediction
+        P[:3, 3:] = Fx@P[:3, 3:]# TODO robot-map covariance prediction
+        P[3:, :3] = P[:3, 3:].T# TODO map-robot covariance: transpose of the above
 
         assert np.allclose(P, P.T), "EKFSLAM.predict: not symmetric P"
         assert np.all(
@@ -169,6 +176,7 @@ class EKFSLAM:
         x = eta[0:3]
         ## reshape map (2, #landmarks), m[:, j] is the jth landmark
         m = eta[3:].reshape((-1, 2)).T
+        m_dim = len(m)
 
         Rot = rotmat2d(-x[2])
 
