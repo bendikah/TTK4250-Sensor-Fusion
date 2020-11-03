@@ -44,7 +44,10 @@ class EKFSLAM:
         np.ndarray, shape = (3,)
             the predicted state
         """
-        xpred = # TODO, eq (11.7). Should wrap heading angle between (-pi, pi), see utils.wrapToPi
+        xpred = np.zeros(3)# TODO, eq (11.7). Should wrap heading angle between (-pi, pi), see utils.wrapToPi
+        xpred[0] = x[0] + u[0]*np.cos(x[2]) - u[1]*np.sin(x[2]) #TODO:is this correct
+        xpred[1] = x[1] + u[0]*np.sin(x[2]) + u[1]*np.cos(x[2]) #TODO: is this correct?
+        xpred[2] = x[2] + u[2]
 
         assert xpred.shape == (3,), "EKFSLAM.f: wrong shape for xpred"
         return xpred
@@ -64,7 +67,10 @@ class EKFSLAM:
         np.ndarray
             The Jacobian of f wrt. x.
         """
-        Fx = # TODO, eq (11.13)
+        Fx = 0*np.eye(3)# TODO, eq (11.13)
+        Fx[0] = [1, 0, -u[0]*np.sin(x[2]) - u[1]*np.cos(x[2])] #TODO:is this correct?
+        Fx[1] = [0, 1, u[0]*np.cos(x[2]) - u[1]*np.sin(x[2])] #TODO: is this correct?
+        Fx[2] = [0, 0, 1]#TODO: is this correct?
 
         assert Fx.shape == (3, 3), "EKFSLAM.Fx: wrong shape"
         return Fx
@@ -84,8 +90,11 @@ class EKFSLAM:
         np.ndarray
             The Jacobian of f wrt. u.
         """
-        Fu = # TODO, eq (11.14)
-
+        Fu = 0*np.eye(3)# TODO, eq (11.14)
+        Fu[0] = [np.cos(x[2]), -np.sin(x[2]), 0] #TODO:is this correct?
+        Fu[1] = [np.sin(x[2]), np.cos(x[2]), 0] #TODO: is this correct?
+        Fu[2] = [0, 0, 1] #TODO: is this correct?
+        
         assert Fu.shape == (3, 3), "EKFSLAM.Fu: wrong shape"
         return Fu
 
