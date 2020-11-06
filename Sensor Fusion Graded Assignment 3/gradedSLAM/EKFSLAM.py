@@ -316,7 +316,7 @@ class EKFSLAM:
             zj = z[inds]
 
             rot = rotmat2d(zj[1]+eta[2])# TODO, rotmat in Gz
-            lmnew[inds] = sensor_offset_world@zj[0]+eta[:2]# TODO, calculate position of new landmark in world frame
+            lmnew[inds] = lmnew[inds] = eta[:2] + sensor_offset_world * zj[0]#sensor_offset_world@zj[0]+eta[:2]# TODO, calculate position of new landmark in world frame
 
             Gx[inds, :2] = I2# TODO
             Gx[inds, 2] = np.array([zj[0] @ np.array([-np.sin(zj[1] + eta[2]),
