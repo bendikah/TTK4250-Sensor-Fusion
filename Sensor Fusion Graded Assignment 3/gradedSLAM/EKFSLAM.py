@@ -315,21 +315,22 @@ class EKFSLAM:
             inds = slice(ind, ind + 2)
             zj = z[inds]
 
-            rot = # TODO, rotmat in Gz
-            lmnew[inds] = # TODO, calculate position of new landmark in world frame
+            rot = rotmat2d(zj[1]+eta[2])# TODO, rotmat in Gz
+            lmnew[inds] = sensor_offset_world@zj[0]+eta[:2]# TODO, calculate position of new landmark in world frame
 
-            Gx[inds, :2] = # TODO
-            Gx[inds, 2] = # TODO
+            Gx[inds, :2] = I2# TODO
+            Gx[inds, 2] = np.array([zj[0] @ np.array([-np.sin(zj[1] + eta[2]),
+                                                      np.cos(zj[1] + eta[2])]).T + sensor_offset_world_der @ self.sensor_offset])# TODO
 
-            Gz = # TODO
+            Gz = rot@np.diag([1,zj[0]])# TODO
 
-            Rall[inds, inds] = # TODO, Gz * R * Gz^T, transform measurement covariance from polar to cartesian coordinates
+            Rall[inds, inds] = Gz@ self.R@ Gz.T# TODO, Gz * R * Gz^T, transform measurement covariance from polar to cartesian coordinates
 
         assert len(lmnew) % 2 == 0, "SLAM.add_landmark: lmnew not even length"
-        etaadded = # TODO, append new landmarks to state vector
-        Padded = # TODO, block diagonal of P_new, see problem text in 1g) in graded assignment 3
-        Padded[n:, :n] = # TODO, top right corner of P_new
-        Padded[:n, n:] = # TODO, transpose of above. Should yield the same as calcualion, but this enforces symmetry and should be cheaper
+        etaadded = np.vstack(eta,lmnew)# TODO, append new landmarks to state vector
+        Padded = np.diag([P, Gx@P[:3,:3]@Gx.T + Rall])# TODO, block diagonal of P_new, see problem text in 1g) in graded assignment 3
+        Padded[n:, :n] = Gx@P[:3, :]# TODO, top right corner of P_new
+        Padded[:n, n:] = Padded[n:, :n].T# TODO, transpose of above. Should yield the same as calcualion, but this enforces symmetry and should be cheaper
 
         assert (
             etaadded.shape * 2 == Padded.shape
@@ -394,6 +395,7 @@ class EKFSLAM:
 
             return zass, zpredass, Hass, Sass, a
         else:
+            print("no do asso")
             # should one do something her
             pass
 
@@ -421,12 +423,12 @@ class EKFSLAM:
 
         if numLmk > 0:
             # Prediction and innovation covariance
-            zpred = #TODO
-            H = # TODO
+            zpred = self.h(eta)#TODO
+            H = self.H(eta)# TODO
 
             # Here you can use simply np.kron (a bit slow) to form the big (very big in VP after a while) R,
             # or be smart with indexing and broadcasting (3d indexing into 2d mat) realizing you are adding the same R on all diagonals
-            S = # TODO,
+            S = H @ P @ H.T + np.kron(np.eye(numLmk),self.R)# TODO,
             assert (
                 S.shape == zpred.shape * 2
             ), "EKFSLAM.update: wrong shape on either S or zpred"
@@ -437,27 +439,28 @@ class EKFSLAM:
 
             # No association could be made, so skip update
             if za.shape[0] == 0:
-                etaupd = # TODO
-                Pupd = # TODO
+                etaupd, Pupd = self.predict(eta,P,z) # TODO
                 NIS = 1 # TODO: beware this one when analysing consistency.
-
             else:
                 # Create the associated innovation
                 v = za.ravel() - zpred  # za: 2D -> flat
                 v[1::2] = utils.wrapToPi(v[1::2])
 
+                cho = la.cho_factor(Sa)
+                
                 # Kalman mean update
                 # S_cho_factors = la.cho_factor(Sa) # Optional, used in places for S^-1, see scipy.linalg.cho_factor and scipy.linalg.cho_solve
-                W = # TODO, Kalman gain, can use S_cho_factors
-                etaupd = # TODO, Kalman update
+                W = P@H.T@cho# TODO, Kalman gain, can use S_cho_factors
+                etapred, Ppred = self.predict(eta,P,z)
+                etaupd = etapred+W@v
 
                 # Kalman cov update: use Joseph form for stability
                 jo = -W @ Ha
                 jo[np.diag_indices(jo.shape[0])] += 1  # same as adding Identity mat
-                Pupd = # TODO, Kalman update. This is the main workload on VP after speedups
+                Pupd = jo@Ppred@jo.T + W@np.kron(np.eye(numLmk),self.R)@W.T# TODO, Kalman update. This is the main workload on VP after speedups
 
                 # calculate NIS, can use S_cho_factors
-                NIS = # TODO
+                NIS = v.T@cho@v # TODO
 
                 # When tested, remove for speed
                 assert np.allclose(Pupd, Pupd.T), "EKFSLAM.update: Pupd not symmetric"
@@ -468,7 +471,7 @@ class EKFSLAM:
         else:  # All measurements are new landmarks,
             a = np.full(z.shape[0], -1)
             z = z.flatten()
-            NIS = 0 # TODO: beware this one, you can change the value to for instance 1
+            NIS = 1 # TODO: beware this one, you can change the value to for instance 1 (was originally 0)
             etaupd = eta
             Pupd = P
 
@@ -480,7 +483,7 @@ class EKFSLAM:
                 z_new_inds[::2] = is_new_lmk
                 z_new_inds[1::2] = is_new_lmk
                 z_new = z[z_new_inds]
-                etaupd, Pupd = # TODO, add new landmarks.
+                etaupd, Pupd = self.add_landmarks(eta,P,z)# TODO, add new landmarks.
 
         assert np.allclose(Pupd, Pupd.T), "EKFSLAM.update: Pupd must be symmetric"
         assert np.all(np.linalg.eigvals(Pupd) >= 0), "EKFSLAM.update: Pupd must be PSD"
