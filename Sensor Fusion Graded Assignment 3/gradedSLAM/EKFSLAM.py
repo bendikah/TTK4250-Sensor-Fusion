@@ -176,19 +176,31 @@ class EKFSLAM:
         x = eta[0:3]
         ## reshape map (2, #landmarks), m[:, j] is the jth landmark
         m = eta[3:].reshape((-1, 2)).T
-        m_dim = len(m)
+        m0_dim = len(m[0])
 
         Rot = rotmat2d(-x[2])
 
         # None as index ads an axis with size 1 at that position.
         # Numpy broadcasts size 1 dimensions to any size when needed
-        delta_m = # TODO, relative position of landmark to sensor on robot in world frame
+        """
+        z_pred = np.zeros_like(m) #is this correct?
+        for i in range(m0_dim):
+            coords = np.array([m[0][i],m[1][i]])
+            delta_m = (coords - x[:2]) - (Rot @ self.sensor_offset)# TODO, relative position of landmark to sensor on robot in world frame
+            delta_norm = la.norm(delta_m)
+            delta_m = delta_m.reshape((2,))
+            arg = Rot @ delta_m
+            bearing = np.arctan2(arg[0],arg[1]) #is this right?
+            z_pred[0][i]=delta_norm
+            z_pred[1][i]=bearing #is this correct?
+        """ #TODO: fix this loop
+        
+        delta_m = m - (x[:2,None]+Rot.T @ self.sensor_offset[:,None])
+        zpredcart = Rot @ delta_m# TODO, predicted measurements in cartesian coordinates, beware sensor offset for VP
 
-        zpredcart = # TODO, predicted measurements in cartesian coordinates, beware sensor offset for VP
-
-        zpred_r = # TODO, ranges
-        zpred_theta = # TODO, bearings
-        zpred = # TODO, the two arrays above stacked on top of each other vertically like 
+        zpred_r = np.linalg.norm(zpredcart,axis=0)# TODO, ranges
+        zpred_theta = np.arctan2(zpredcart[1],zpredcart[0])# TODO, bearings
+        zpred = np.vstack((zpred_r, zpred_theta))# TODO, the two arrays above stacked on top of each other vertically like 
         # [ranges; 
         #  bearings]
         # into shape (2, #lmrk)
