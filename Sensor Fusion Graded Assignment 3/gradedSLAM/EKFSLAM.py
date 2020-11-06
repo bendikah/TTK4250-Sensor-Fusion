@@ -234,16 +234,16 @@ class EKFSLAM:
 
         Rot = rotmat2d(x[2])
 
-        delta_m = # TODO, relative position of landmark to robot in world frame. m - rho that appears in (11.15) and (11.16)
+        delta_m = np.array([m[:,i]-x[:2] for i in range(numM)]).T# TODO, relative position of landmark to robot in world frame. m - rho that appears in (11.15) and (11.16)
 
-        zc = # TODO, (2, #measurements), each measured position in cartesian coordinates like
+        zc = np.array([delta_m[:,i]-Rot @ self.sensor_offset for i in range(numM)]).T# TODO, (2, #measurements), each measured position in cartesian coordinates like
         # [x coordinates;
         #  y coordinates]
 
-        zpred = # TODO (2, #measurements), predicted measurements, like
+        zpred = self.h(eta)# TODO (2, #measurements), predicted measurements, like
         # [ranges;
         #  bearings]
-        zr = # TODO, ranges
+        zr = zpred[1,:]# TODO, ranges
 
         Rpihalf = rotmat2d(np.pi / 2)
 
@@ -262,10 +262,19 @@ class EKFSLAM:
         for i in range(numM):  # But this whole loop can be vectorized
             ind = 2 * i # starting postion of the ith landmark into H
             inds = slice(ind, ind + 2)  # the inds slice for the ith landmark into H
-
+            
+            d = delta_m[:,i]
             # TODO: Set H or Hx and Hm here
+            Hx[inds] = -np.array([[1/la.norm(d_m) @ d_m.T, 0],[1/la.norm(d_m)**2 @ d_m.T @ Rpihalf, 1]])#is this correct?
+            Hm[inds] = (1/la.norm(d_m)**2) * np.array([[la.norm(d_m) @ d_m.T],[d_m.T@Rpihalf]])
+            
 
         # TODO: You can set some assertions here to make sure that some of the structure in H is correct
+        
+        assert H (
+            H.shape[0] == 2 * numM and H.shape[1] == 3 + 2 * numM
+        ), "H has dimension:... Expected dimension... (In EKFSLAM.py)"
+    
         return H
 
     def add_landmarks(
