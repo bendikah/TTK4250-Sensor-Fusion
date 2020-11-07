@@ -96,14 +96,12 @@ K = len(z)
 M = len(landmarks)
 
 # %% Initilize
-Q = 1e-2*np.eye(3)# TODO
-R = 1e-2*np.eye(2)# TODO
+Q = 1e-3*np.eye(3)# TODO: 1e-2 doesnt work
+R = 1e-3*np.eye(2)# TODO 1e-2 doesnt work
 
 doAsso = True
 
-JCBBalphas = np.array([1e-3,1e-4]
-    # TODO,
-)  # first is for joint compatibility, second is individual
+JCBBalphas = np.array([1e-3,1e-4])  #TODO first is for joint compatibility, second is individual
 # these can have a large effect on runtime either through the number of landmarks created
 # or by the size of the association search space.
 
@@ -132,7 +130,7 @@ P_pred[0] = np.zeros((3, 3))  # we also say that we are 100% sure about that
 # plotting
 
 doAssoPlot = False
-playMovie = True
+playMovie = False
 if doAssoPlot:
     figAsso, axAsso = plt.subplots(num=1, clear=True)
 
@@ -163,8 +161,8 @@ for k, z_k in tqdm(enumerate(z[:N])):
         NISnorm[k] = 1
         CInorm[k].fill(1)
 
-    NEESes[k]=slam.NEESes(eta_hat[k],P_hat[k],poseGT[k]) # TODO, use provided function slam.NEESes
-    #this does not seem to work^
+    NEESes[k]=slam.NEESes(eta_hat[k][:3],P_hat[k][:3,:3],poseGT[k]) # TODO, use provided function slam.NEESes [:3,:3]??
+    #DONE: works now
 
     if doAssoPlot and k > 0:
         axAsso.clear()
