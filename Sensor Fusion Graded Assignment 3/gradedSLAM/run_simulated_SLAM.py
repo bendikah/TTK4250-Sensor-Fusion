@@ -162,7 +162,7 @@ for k, z_k in tqdm(enumerate(z[:N])):
         CInorm[k].fill(1)
 
     NEESes[k]=slam.NEESes(eta_hat[k][:3],P_hat[k][:3,:3],poseGT[k]) # TODO, use provided function slam.NEESes [:3,:3]??
-    #DONE: works now
+    
 
     if doAssoPlot and k > 0:
         axAsso.clear()
