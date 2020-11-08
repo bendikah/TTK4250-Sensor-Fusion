@@ -96,12 +96,12 @@ K = len(z)
 M = len(landmarks)
 
 # %% Initilize
-Q = 1e-3*np.array([[1.5,0,0],[0,1.5,0],[0,0,0.001]])# TODO
-R = 1e-3*np.array([[1, 0],[0, 1]])# TODO
+Q = np.array([[(6e-2)**2,0,0],[0,(6e-2)**2,0],[0,0,(1.8e-2)**2]])# TODO
+R = np.array([[(4e-2)**2, 0],[0, (2e-2)**2]])# TODO
 
 doAsso = True
 
-JCBBalphas = np.array([1e-3,1e-4])  #TODO first is for joint compatibility, second is individual
+JCBBalphas = np.array([1e-10,1e-5])  #TODO first is for joint compatibility, second is individual
 # these can have a large effect on runtime either through the number of landmarks created
 # or by the size of the association search space.
 
