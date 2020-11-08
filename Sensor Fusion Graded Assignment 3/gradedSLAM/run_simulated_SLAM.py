@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from matplotlib import animation
 from scipy.stats import chi2
 import utils
+matplotlib.rc('xtick', labelsize=15) 
+matplotlib.rc('ytick', labelsize=15) 
 
 try:
     from tqdm import tqdm
@@ -263,8 +265,8 @@ errs = np.vstack((pos_err, heading_err))
 
 for ax, err, tag, ylabel, scaling in zip(ax5, errs, tags[1:], ylabels, scalings):
     ax.plot(err*scaling)
-    ax.set_title(f"{tag}: RMSE {np.sqrt((err**2).mean())*scaling} {ylabel}")
-    ax.set_ylabel(f"[{ylabel}]")
+    ax.set_title(f"{tag}: RMSE {round(np.sqrt((err**2).mean())*scaling,2)} {ylabel}", fontsize=20)
+    ax.set_ylabel(f"[{ylabel}]", fontsize=15)
     ax.grid()
 
 fig5.tight_layout()
