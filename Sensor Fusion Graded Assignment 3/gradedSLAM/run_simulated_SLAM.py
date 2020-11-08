@@ -96,8 +96,8 @@ K = len(z)
 M = len(landmarks)
 
 # %% Initilize
-Q = 1e-3*np.eye(3)# TODO: 1e-2 doesnt work
-R = 1e-3*np.eye(2)# TODO 1e-2 doesnt work
+Q = 1e-3*np.array([[1.5,0,0],[0,1.5,0],[0,0,0.001]])# TODO
+R = 1e-3*np.array([[1, 0],[0, 1]])# TODO
 
 doAsso = True
 
@@ -152,7 +152,7 @@ for k, z_k in tqdm(enumerate(z[:N])):
 
     num_asso = np.count_nonzero(a[k] > -1)
 
-    CI[k] = chi2.interval(alpha, 2 * num_asso)
+    CI[k] = chi2.interval(1-alpha, 2 * num_asso) #DONE: 1-alpha
 
     if num_asso > 0:
         NISnorm[k] = NIS[k] / (2 * num_asso)
@@ -161,8 +161,8 @@ for k, z_k in tqdm(enumerate(z[:N])):
         NISnorm[k] = 1
         CInorm[k].fill(1)
 
-    NEESes[k]=slam.NEESes(eta_hat[k][:3],P_hat[k][:3,:3],poseGT[k]) # TODO, use provided function slam.NEESes [:3,:3]??
-    
+    NEESes[k]=slam.NEESes(eta_hat[k][:3],P_hat[k][:3,:3],poseGT[k]) # TODO, use provided function slam.NEESes 
+    #DONE: [:3,:3]
 
     if doAssoPlot and k > 0:
         axAsso.clear()
@@ -235,14 +235,14 @@ tags = ['all', 'pos', 'heading']
 dfs = [3, 2, 1]
 
 for ax, tag, NEES, df in zip(ax4, tags, NEESes.T, dfs):
-    CI_NEES = chi2.interval(alpha, df)
+    CI_NEES = chi2.interval(1 - alpha, df) #DONE: 1-alpha fix
     ax.plot(np.full(N, CI_NEES[0]), '--')
     ax.plot(np.full(N, CI_NEES[1]), '--')
     ax.plot(NEES[:N], lw=0.5)
     insideCI = (CI_NEES[0] <= NEES) * (NEES <= CI_NEES[1])
     ax.set_title(f'NEES {tag}: {insideCI.mean()*100}% inside CI')
 
-    CI_ANEES = np.array(chi2.interval(alpha, df*N)) / N
+    CI_ANEES = np.array(chi2.interval(1 - alpha, df*N)) / N #DONE: 1-alpha fix
     print(f"CI ANEES {tag}: {CI_ANEES}")
     print(f"ANEES {tag}: {NEES.mean()}")
 
