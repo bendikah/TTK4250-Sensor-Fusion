@@ -4,6 +4,9 @@ from typing import List, Optional
 from scipy.io import loadmat
 import numpy as np
 
+import time
+start_time = time.time()
+
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import animation
@@ -103,7 +106,7 @@ R = np.array([[(4.7e-2)**2, 0],[0, (1.9e-2)**2]])# TODO
 
 doAsso = True
 
-JCBBalphas = np.array([1e-10,1e-10]) #TODO first is for joint compatibility, second is individual
+JCBBalphas = np.array([1e-3,1e-3]) #TODO first is for joint compatibility, second is individual
 # these can have a large effect on runtime either through the number of landmarks created
 # or by the size of the association search space.
 
@@ -315,4 +318,5 @@ if playMovie:
         )
 
 plt.show()
+print("--- %s seconds ---" % (time.time() - start_time))
 # %%
