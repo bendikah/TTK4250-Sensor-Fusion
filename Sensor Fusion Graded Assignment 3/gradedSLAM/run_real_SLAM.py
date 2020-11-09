@@ -143,7 +143,7 @@ mk = mk_first
 t = timeOdo[0]
 
 # %%  run
-N = K//5
+N = K//2
 
 
 
@@ -272,10 +272,10 @@ plt.show()
 gpsXY = [Lo_m, La_m]
 Lo_m_lim = Lo_m[timeGps < timeOdo[N - 1]]
 La_m_lim = La_m[timeGps < timeOdo[N - 1]]
-theta = -0.4*np.pi/12
+theta = -0.22*np.pi/12
 trans = np.zeros((2,len(Lo_m_lim)))
-trans[0,:] = 0
-trans[1,:] = 15
+trans[0,:] = 2
+trans[1,:] = 10
 gps_rot = np.zeros((len(Lo_m_lim),2))
 
 for i in range(len(Lo_m_lim)):
