@@ -20,7 +20,7 @@ class EKFSLAM:
         self,
         Q,
         R,
-        do_asso=False,
+        do_asso=True,
         alphas=np.array([0.001, 0.0001]),
         sensor_offset=np.zeros(2),
     ):
