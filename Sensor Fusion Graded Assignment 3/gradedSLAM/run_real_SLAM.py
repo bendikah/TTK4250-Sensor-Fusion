@@ -106,14 +106,14 @@ b = 0.5  # laser distance to the left of center
 
 car = Car(L, H, a, b)
 
-sigmas = np.array([(4e-2)**2,(4e-2)**2,(2e-2)**2])*2e-1 #TODOCorrCoeff = np.array([[1, 0, 0], [0, 1, 0.9], [0, 0.9, 1]])
+sigmas = np.array([(4.2e-2),(5e-2),(5e-3)])
 CorrCoeff = np.array([[1, 0, 0], [0, 1, 0.9], [0, 0.9, 1]])
 Q = np.diag(sigmas) @ CorrCoeff @ np.diag(sigmas)
+#Q = np.array([[0.25,0,0],[0,0.25,0.0225],[0,0.0225, 0.0025]])
 
+R = np.diag([1e-2, 1.1e-2])  # TODO
 
-R = np.array([[(4e-2)**2,0],[0,(2e-2)**2]])*1.5e0#np.diag([1e-2, 1.1e-2])  # TODO
-
-JCBBalphas = np.array([1e-2,1e-3]
+JCBBalphas = np.array([1e-5, 1e-3]
     # TODO
 )
 sensorOffset = np.array([car.a + car.L, car.b])
@@ -133,7 +133,7 @@ CI = np.zeros((mK, 2))
 CInorm = np.zeros((mK, 2))
 
 # Initialize state
-eta = np.array([Lo_m[0], La_m[1], 36 * np.pi / 180]) # you might want to tweak these for a good reference
+eta = np.array([Lo_m[0], La_m[1], 30 * np.pi / 180]) # you might want to tweak these for a good reference
 P = np.zeros((3, 3))
 
 mk_first = 1  # first seems to be a bit off in timing
@@ -141,7 +141,7 @@ mk = mk_first
 t = timeOdo[0]
 
 # %%  run
-N = 20000#K
+N = K//5
 
 
 
@@ -261,6 +261,43 @@ ax6.set(
     title=f"Steps {k}, laser scans {mk-1}, landmarks {len(eta[3:])//2},\nmeasurements {z.shape[0]}, num new = {np.sum(a[mk] == -1)}"
 )
 plt.show()
+
+# %%
+
+fig8, ax8 = plt.subplots(num=8, clear=True)
+ax8.scatter(Lo_m[timeGps < timeOdo[N - 1]],
+        La_m[timeGps < timeOdo[N - 1]],
+        c="r",
+        marker=".",
+        label="GPS",)
+ax8.plot(*xupd[mk_first:mk, :2].T)
+plt.show()
+
+# %% 
+
+gpsXY = [Lo_m, La_m]
+Lo_m_lim = Lo_m[timeGps < timeOdo[N - 1]]
+La_m_lim = La_m[timeGps < timeOdo[N - 1]]
+theta = -0.1*np.pi/12
+trans = np.zeros((2,len(Lo_m_lim)))
+trans[0,:] = 0
+trans[1,:] = 10
+gps_rot = np.zeros((len(Lo_m_lim),2))
+
+for i in range(len(Lo_m_lim)):
+    gps_now = np.array([Lo_m_lim[i],La_m_lim[i]])
+    gps_rot[i] = gps_now@rotmat2d(theta)
+print((gps_rot))
+print(len(Lo_m))
+    
+gps_true = np.add(gps_rot.T, trans)
+fig7, ax7 = plt.subplots(num = 7, clear=True)
+ax7.scatter(
+        gps_true[0,:],gps_true[1,:]
+    )
+ax7.plot(*xupd[mk_first:mk, :2].T)
+plt.show()
+
 
 # %%
 
