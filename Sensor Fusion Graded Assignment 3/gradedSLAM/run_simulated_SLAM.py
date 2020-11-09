@@ -101,12 +101,12 @@ K = len(z)
 M = len(landmarks)
 
 # %% Initilize
-Q = np.array([[(7e-2)**2,0,0],[0,(7e-2)**2,0],[0,0,(2e-2)**2]])*1e-1# TODO
-R = np.array([[(4e-2)**2, 0],[0, (2e-2)**2]])*2e0# TODO
+Q = np.array([[(3.9e-2)**2,0,0],[0,(3.9e-2)**2,0],[0,0,(6e-3)**2]])# TODO
+R = np.array([[(5e-2)**2, 0],[0, (2e-2)**2]])# TODO
 
 doAsso = True
 
-JCBBalphas = np.array([1e-5,1e-5]) #TODO first is for joint compatibility, second is individual
+JCBBalphas = np.array([1e-5,1e-15]) #TODO first is for joint compatibility, second is individual
 # these can have a large effect on runtime either through the number of landmarks created
 # or by the size of the association search space.
 
@@ -219,7 +219,7 @@ ax2.plot(*poseGT.T[:2], c="r", label="gt")
 ax2.plot(*pose_est.T[:2], c="g", label="est")
 ax2.plot(*ellipse(pose_est[-1, :2], P_hat[N - 1][:2, :2], 5, 200).T, c="g")
 ax2.set(xlim=(mins[0], maxs[0]), ylim=(mins[1], maxs[1]))
-ax2.set_title("results", fontsize=30)
+ax2.set_title("Estimates and landmarks", fontsize=30)
 ax2.axis("equal")
 ax2.grid()
 
@@ -233,7 +233,7 @@ ax3.plot(CInorm[:N,0], '--')
 ax3.plot(CInorm[:N,1], '--')
 ax3.plot(NISnorm[:N], lw=0.5)
 
-ax3.set_title(f'NIS, {insideCI.mean()*100}% inside CI', fontsize=30)
+ax3.set_title(f'NIS, {round(insideCI.mean()*100,2)}% inside CI', fontsize=30)
 
 # NEES
 
@@ -247,7 +247,7 @@ for ax, tag, NEES, df in zip(ax4, tags, NEESes.T, dfs):
     ax.plot(np.full(N, CI_NEES[1]), '--')
     ax.plot(NEES[:N], lw=0.5)
     insideCI = (CI_NEES[0] <= NEES) * (NEES <= CI_NEES[1])
-    ax.set_title(f'NEES {tag}: {insideCI.mean()*100}% inside CI', fontsize=30)
+    ax.set_title(f'NEES {tag}: {round(insideCI.mean()*100,2)}% inside CI', fontsize=30)
 
     CI_ANEES = np.array(chi2.interval(1 - alpha, df*N)) / N #DONE: 1-alpha fix
     print(f"CI ANEES {tag}: {CI_ANEES}")
@@ -318,6 +318,7 @@ if playMovie:
             "Install celluloid module, \n\n$ pip install celluloid\n\nto get fancy animation of EKFSLAM."
         )
 
-plt.show()
 print("--- %s seconds ---" % (time.time() - start_time))
+plt.show()
+
 # %%
