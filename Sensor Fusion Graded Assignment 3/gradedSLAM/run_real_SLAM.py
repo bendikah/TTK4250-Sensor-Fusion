@@ -262,33 +262,24 @@ ax6.set(
 )
 plt.show()
 
-# %%
 
-fig8, ax8 = plt.subplots(num=8, clear=True)
-ax8.scatter(Lo_m[timeGps < timeOdo[N - 1]],
-        La_m[timeGps < timeOdo[N - 1]],
-        c="r",
-        marker=".",
-        label="GPS",)
-ax8.plot(*xupd[mk_first:mk, :2].T)
-plt.show()
 
 # %% 
+#Rotating gps
 
 gpsXY = [Lo_m, La_m]
 Lo_m_lim = Lo_m[timeGps < timeOdo[N - 1]]
 La_m_lim = La_m[timeGps < timeOdo[N - 1]]
-theta = -0.1*np.pi/12
+theta = -0.4*np.pi/12
 trans = np.zeros((2,len(Lo_m_lim)))
 trans[0,:] = 0
-trans[1,:] = 10
+trans[1,:] = 15
 gps_rot = np.zeros((len(Lo_m_lim),2))
 
 for i in range(len(Lo_m_lim)):
     gps_now = np.array([Lo_m_lim[i],La_m_lim[i]])
     gps_rot[i] = gps_now@rotmat2d(theta)
-print((gps_rot))
-print(len(Lo_m))
+
     
 gps_true = np.add(gps_rot.T, trans)
 fig7, ax7 = plt.subplots(num = 7, clear=True)
@@ -296,8 +287,9 @@ ax7.scatter(
         gps_true[0,:],gps_true[1,:]
     )
 ax7.plot(*xupd[mk_first:mk, :2].T)
+ax7.scatter(*eta[3:].reshape(-1, 2).T, color="r", marker="x")
+
 plt.show()
 
 
 # %%
-
