@@ -106,13 +106,15 @@ b = 0.5  # laser distance to the left of center
 
 car = Car(L, H, a, b)
 
-sigmas = np.array([(4.2e-2),(5e-2),(5e-3)])
+#sigmas = np.array([(4.2e-2),(5e-2),(5e-3)])
+#sigmas = np.array([(3.9e-2)**2,(3.9e-2)**2,(6e-3)**2])# Bendiks parameters slow and bad 
+sigmas = np.array([(3.9e-2),(3.9e-2),(6e-3)])
 CorrCoeff = np.array([[1, 0, 0], [0, 1, 0.9], [0, 0.9, 1]])
 Q = np.diag(sigmas) @ CorrCoeff @ np.diag(sigmas)
-#Q = np.array([[0.25,0,0],[0,0.25,0.0225],[0,0.0225, 0.0025]])
 
-R = np.diag([1e-2, 1.1e-2])  # TODO
-
+#R = np.diag([1e-2, 1.1e-2])  # TODO
+R = np.array([[(5e-2)**2, 0],[0, (2e-2)**2]])# Bendiks parameters slow and bad
+#R = np.array([[(5e-2), 0],[0, (2e-2)]])
 JCBBalphas = np.array([1e-5, 1e-3]
     # TODO
 )
