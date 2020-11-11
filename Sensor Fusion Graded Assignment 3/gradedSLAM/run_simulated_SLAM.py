@@ -142,6 +142,11 @@ if doAssoPlot:
 # %% Run simulation
 N = K
 
+#ANIS inspired by Odin from the forums
+total_num_asso = 0
+# Initialize all NIS as invalid, i.e. nan
+NISes = np.full(N, np.nan)
+
 print("starting sim (" + str(N) + " iterations)")
 
 for k, z_k in tqdm(enumerate(z[:N])):
@@ -163,6 +168,11 @@ for k, z_k in tqdm(enumerate(z[:N])):
     if num_asso > 0:
         NISnorm[k] = NIS[k] / (2 * num_asso)
         CInorm[k] = CI[k] / (2 * num_asso)
+        
+        #ANIS inspired by Odin from the forums
+        total_num_asso += num_asso
+        NISes[k] = NIS[k]
+        
     else:
         NISnorm[k] = 1
         CInorm[k].fill(1)
@@ -226,12 +236,31 @@ ax2.grid()
 # %% Consistency
 
 # NIS
+insideCI = (CI[:N,0] <= NIS[:N]) * (NIS[:N] <= CI[:N,1])
+
+fig3, ax3 = plt.subplots(num=3, clear=True)
+ax3.plot(CI[:N,0], '--')
+ax3.plot(CI[:N,1], '--')
+ax3.plot(NIS[:N], lw=0.5)
+
+"""
+#Changed from NIS norm to NIS. Handout below. Which is correct?
 insideCI = (CInorm[:N,0] <= NISnorm[:N]) * (NISnorm[:N] <= CInorm[:N,1])
 
 fig3, ax3 = plt.subplots(num=3, clear=True)
 ax3.plot(CInorm[:N,0], '--')
 ax3.plot(CInorm[:N,1], '--')
 ax3.plot(NISnorm[:N], lw=0.5)
+"""
+
+#ANIS (inspired by Odin from the forums)
+valid_NIS = ~np.isnan(NISes)
+NIS = NIS[valid_NIS]
+# Interval and ANIS
+CI_ANIS = np.array(chi2.interval(1 - alpha, total_num_asso * 2)) / NISes.size
+print("ANIS CI =", CI_ANIS)
+ANIS = NIS.mean() 
+print("ANIS = ",ANIS)
 
 ax3.set_title(f'NIS, {round(insideCI.mean()*100,2)}% inside CI', fontsize=30)
 
